@@ -1,0 +1,20 @@
+.custom-header {
+    background-color: white;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px 20px;
+}
+
+.nav-item {
+    padding: 0px 15px;
+}
+
+.nav-item:nth-child(2) .nav-link {
+    cursor: default;
+    pointer-events: none;
+    text-decoration: none;
+}
+
+.profile {
+    text-decoration: none;
+    color: black;
+}

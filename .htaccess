@@ -1,0 +1,9 @@
+# Remove .php extension in URL
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+# Disable PHP error reporting
+# php_flag display_errors Off
+# php_flag log_errors On
+# php_value error_log logs/php_error.log

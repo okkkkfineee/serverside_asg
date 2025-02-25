@@ -1,0 +1,13 @@
+body {
+    background-color: #d3d3d3 !important;
+}
+
+button {
+    background-color: grey !important;
+    border: none !important;
+    color: white !important;
+}
+
+button:hover {
+    filter: brightness(0.85);
+}
