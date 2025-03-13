@@ -6,11 +6,12 @@ $env = loadEnv(__DIR__ . '/../src/.env');
 //server database connection
 $server = $env['DB_SERVER'];
 $user = $env['DB_USER'];
-$password = "";
+$password = $env['DB_PASSWORD'];
 $database = $env['DB_DATABASE'];
 
-$conn = mysqli_connect(hostname: $server, username: $user, password: $password, database: $database);
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+$conn = new mysqli($server, $user, $password, $database);
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
+return $conn;
 ?>
