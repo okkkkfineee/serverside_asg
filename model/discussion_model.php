@@ -72,23 +72,25 @@ class Discussion {
     }
     
     public function getDiscussion($id) {
-        $sql = "SELECT d.*, u.username 
+        $sql = "SELECT d.*, r.title AS recipe_title, r.images AS recipe_images, u.username 
                 FROM discussions d 
+                LEFT JOIN recipe r ON d.recipe_id = r.recipe_id
                 JOIN user u ON d.user_id = u.user_id 
                 WHERE discussion_id = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $result = $stmt->get_result();
-        return $result->fetch_assoc();
+        $discussion = $result->fetch_assoc();
+        return $discussion ? $discussion : null;
     }
     
-    public function createDiscussion($userId, $title, $content, $createdTime) {
-        $sql = "INSERT INTO discussions (user_id, title, content, created_time) 
-                VALUES (?, ?, ?, ?)";
+    // Handle the recipe id as well (null means is a optional param)
+    public function createDiscussion($userId, $title, $content, $createdTime, $recipe_id = null) {
+        $sql = "INSERT INTO discussions (user_id, title, content, created_time, recipe_id) 
+                VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("isss", $userId, $title, $content, $createdTime);
-        
+        $stmt->bind_param("isssi", $userId, $title, $content, $createdTime, $recipe_id);
         if ($stmt->execute()) {
             return $this->conn->insert_id;
         } else {
@@ -96,10 +98,10 @@ class Discussion {
         }
     }
     
-    public function updateDiscussion($id, $title, $content) {
-        $sql = "UPDATE discussions SET title = ?, content = ? WHERE discussion_id = ?";
+    public function updateDiscussion($id, $title, $content, $recipe_id = null) {
+        $sql = "UPDATE discussions SET title = ?, content = ?, recipe_id = ? WHERE discussion_id = ?";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("ssi", $title, $content, $id);
+        $stmt->bind_param("ssii", $title, $content, $recipe_id, $id);
         return $stmt->execute();
     }
     

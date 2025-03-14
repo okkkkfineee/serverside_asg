@@ -36,26 +36,27 @@ switch ($method) {
         }
         break;
 
-    case 'POST':
-        $data = json_decode(file_get_contents('php://input'), true);
-        if (!$data || !isset($data['title']) || !isset($data['content'])) {
-            echo json_encode(['success' => false, 'message' => 'Invalid JSON data.']);
-            exit;
-        }
-
-        // Validate title and content
-        $title = trim($data['title']);
-        $content = trim($data['content']);
-        if (empty($title) || empty($content)) {
-            echo json_encode(['success' => false, 'message' => 'Title and content are required.']);
-            exit;
-        }
-
-        $userId = $_SESSION['user_id'];
-        $createdTime = date('Y-m-d H:i:s');
-        $result = $discussionController->createDiscussion($userId, $title, $content, $createdTime);
-        echo json_encode(is_numeric($result) ? ['success' => true, 'message' => 'Discussion created successfully.', 'discussionId' => $result] : ['success' => false, 'message' => 'Failed to create discussion']);
-        break;
+        case 'POST':
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!$data || !isset($data['title']) || !isset($data['content'])) {
+                echo json_encode(['success' => false, 'message' => 'Invalid JSON data.']);
+                exit;
+            }
+        
+            // Validate title and content
+            $title = trim($data['title']);
+            $content = trim($data['content']);
+            $recipe_id = isset($data['recipe_id']) ? ($data['recipe_id'] ? intval($data['recipe_id']) : null) : null;
+            if (empty($title) || empty($content)) {
+                echo json_encode(['success' => false, 'message' => 'Title and content are required.']);
+                exit;
+            }
+        
+            $userId = $_SESSION['user_id'];
+            $createdTime = date('Y-m-d H:i:s');
+            $result = $discussionController->createDiscussion($userId, $title, $content, $createdTime, $recipe_id);
+            echo json_encode(is_numeric($result) ? ['success' => true, 'message' => 'Discussion created successfully.', 'discussionId' => $result] : ['success' => false, 'message' => 'Failed to create discussion']);
+            break;
 
     case 'PUT':
         $data = json_decode(file_get_contents('php://input'), true);
@@ -67,7 +68,9 @@ switch ($method) {
         $userId = $_SESSION['user_id'];
         $title = isset($data['title']) ? trim($data['title']) : '';
         $content = isset($data['content']) ? trim($data['content']) : '';
-        $result = $discussionController->updateDiscussion($discussionId, $userId, $title, $content);
+        // Handle null or invalid recipe_id
+        $recipe_id = isset($data['recipe_id']) ? ($data['recipe_id'] ? intval($data['recipe_id']) : null) : null; 
+        $result = $discussionController->updateDiscussion($discussionId, $userId, $title, $content, $recipe_id);
         echo json_encode($result === true ? ['success' => true, 'message' => 'Discussion updated successfully.'] : ['success' => false, 'message' => $result]);
         break;
 

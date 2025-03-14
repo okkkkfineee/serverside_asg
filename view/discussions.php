@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-require_once '../includes/header.php';
 require_once '../includes/auth.php';
 require '../controller/discussion_controller.php';
 require '../controller/recipe_rating_controller.php';
@@ -19,16 +18,14 @@ $discussionRatingController = new DiscussionRatingController($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discussions</title>
+    <link rel="icon" href="../assets/images/icon.png">
+    <link rel="stylesheet" href="../assets/css/header.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <style>
-        .user-btn { position: absolute; top: 10px; right: 10px; }
-        .recipe-image { max-width: 200px; margin-top: 10px; }
-        #recipeSearchResults { position: absolute; z-index: 1000; background: white; border: 1px solid #ccc; max-height: 200px; overflow-y: auto; display: none; }
-    </style>
 </head>
 <body>
+    <?php include '../includes/header.php'; ?>
     <div class="container mt-4">
         <div id="alertContainer"></div>
         <!-- Removed empty if block for clarity -->
@@ -212,37 +209,42 @@ $discussionRatingController = new DiscussionRatingController($conn);
             $.ajax({
                 url: '/serverside/api/discussions.php?id=' + id,
                 type: 'GET',
-                success: function(response) {
-                    if (response.success) {
-                        const d = response.data;
-                        currentDiscussionId = d.discussion_id;
-                        $('#breadcrumb').html(`<ol class="breadcrumb"><li class="breadcrumb-item"><a href="#" id="backToList">Discussions</a></li><li class="breadcrumb-item active">${d.title}</li></ol>`);
-                        $('#discussionTitle').text(d.title);
-                        $('#discussionMeta').text(`By ${d.username} on ${new Date(d.created_time).toLocaleString()}`);
-                        $('#discussionContent').html(d.content.replace(/\n/g, '<br>'));
-                        $('#recipeRatingRecipeId').val(d.recipe_id || '');
-                        $('#discussionRatingDiscussionId, #commentDiscussionId').val(id);
-                        $('#discussionDetail').show();
-                        $('#defaultMessage, #discussionFormContainer').hide();
-                        const isOwner = <?php echo isLoggedIn() ? 'd.user_id === ' . ($_SESSION['user_id'] ?? 'null') : 'false'; ?>;
-                        const isAdmin = <?php echo isset($_SESSION['roles']) && $_SESSION['roles'] === 'admin' ? 'true' : 'false'; ?>;
-                        $('#discussionActions').html((isOwner || isAdmin) ? `
-                            <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${id}">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${id}">Delete</button>` : '');
-                        $('#recipeImage').html(d.recipe_id ? `<img src="${d.images}" class="recipe-image" alt="Recipe Image">` : '');
-                        // Show/hide discussion rating form based on ownership
-                        if (!isOwner && <?php echo isLoggedIn() ? 'true' : 'false'; ?>) {
-                            $('#discussionRatingForm').show();
-                        } else {
-                            $('#discussionRatingForm').hide();
-                        }
-                        loadComments(id);
-                        loadRecipeRating(d.recipe_id);
-                        loadDiscussionRating(id);
+            success: function(response) {
+                if (response.success) {
+                    const d = response.data;
+                    currentDiscussionId = d.discussion_id;
+                    // Ensure session user_id is treated as an integer for comparison
+                    const sessionUserId = parseInt(<?php echo json_encode($_SESSION['user_id'] ?? 'null'); ?>, 10);
+                    const isOwner = <?php echo isLoggedIn() ? 'parseInt(d.user_id, 10) === sessionUserId' : 'false'; ?>;
+                    console.log('API Response user_id (d.user_id):', d.user_id);
+                    console.log('Session user_id (parsed):', sessionUserId);
+                    console.log('isOwner:', isOwner);
+                    $('#breadcrumb').html(`<ol class="breadcrumb"><li class="breadcrumb-item"><a href="#" id="backToList">Discussions</a></li><li class="breadcrumb-item active">${d.title}</li></ol>`);
+                    $('#discussionTitle').text(d.title);
+                    $('#discussionMeta').text(`By ${d.username} on ${new Date(d.created_time).toLocaleString()}`);
+                    $('#discussionContent').html(d.content.replace(/\n/g, '<br>'));
+                    $('#recipeRatingRecipeId').val(d.recipe_id || '');
+                    $('#discussionRatingDiscussionId, #commentDiscussionId').val(id);
+                    $('#discussionDetail').show();
+                    $('#defaultMessage, #discussionFormContainer').hide();
+                    const isAdmin = <?php echo isset($_SESSION['roles']) && $_SESSION['roles'] === 'admin' ? 'true' : 'false'; ?>;
+                    $('#discussionActions').html((isOwner || isAdmin) ? `
+                        <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${id}">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${id}">Delete</button>` : '');
+                    $('#recipeImage').html(d.recipe_id ? `<img src="${d.images}" class="recipe-image" alt="Recipe Image">` : '');
+                    // Show/hide discussion rating form based on ownership
+                    if (!isOwner && <?php echo isLoggedIn() ? 'true' : 'false'; ?>) {
+                        $('#discussionRatingForm').show();
+                    } else {
+                        $('#discussionRatingForm').hide();
                     }
-                },
+                loadComments(id);
+                loadRecipeRating(d.recipe_id);
+                loadDiscussionRating(id);
+                }
+            },
                 error: function(xhr, status, error) {
-                    console.log('AJAX Error in loadDiscussion: ' + error);
+                console.log('AJAX Error in loadDiscussion: ' + error);
                 }
             });
         }

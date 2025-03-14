@@ -142,5 +142,50 @@ class Recipe {
         $stmt->execute();
         return true;
     }
+
+    /**
+     * Search recipes by title or description
+     * @param string $search Search query
+     * @param int|null $userId Optional user ID to filter by
+     * @return array Array of recipe data
+     */
+    public function searchRecipes($search, $userId = null) {
+        $search = '%' . $search . '%';
+        
+        $sql = "SELECT r.recipe_id, r.title, r.images, r.user_id, u.username 
+                FROM recipe r 
+                JOIN user u ON r.user_id = u.user_id 
+                WHERE r.title LIKE ?";
+        
+        // Add user filter if specified
+        $params = [$search];
+        if ($userId !== null) {
+            $sql .= " AND r.user_id = ?";
+            $params[] = $userId;
+        }
+        
+        $sql .= " ORDER BY r.title ASC LIMIT 10";
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        if ($stmt) {
+            // Bind parameters dynamically
+            $types = str_repeat('s', count($params));
+            $stmt->bind_param($types, ...$params);
+            
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $recipes = [];
+            while ($row = $result->fetch_assoc()) {
+                $recipes[] = $row;
+            }
+            
+            $stmt->close();
+            return $recipes;
+        } else {
+            throw new Exception("Failed to prepare statement: " . $this->conn->error);
+        }
+    }
 }
 ?>

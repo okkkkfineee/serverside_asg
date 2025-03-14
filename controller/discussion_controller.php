@@ -107,32 +107,32 @@ class DiscussionController {
         include '../view/discussion.php';
     }
     
-    public function createDiscussion($userId, $title, $content, $createdTime) {
+    public function createDiscussion($userId, $title, $content, $createdTime, $recipe_id = null) {
         // Check if user is logged in (for non-API calls)
         if (!isLoggedIn()) {
             $_SESSION['error'] = "You must be logged in to create a discussion";
-            return false; // Return false instead of redirecting
+            return false;
         }
         
-        // Validate form data (already handled in API, but keep for non-API calls)
+        // Validate form data
         if (empty($title) || empty($content)) {
             $_SESSION['error'] = "Title and content are required";
             return false;
         }
         
         // Create discussion
-        $result = $this->discussion->createDiscussion($userId, $title, $content, $createdTime);
+        $result = $this->discussion->createDiscussion($userId, $title, $content, $createdTime, $recipe_id);
         
         if ($result) {
             $_SESSION['success'] = "Discussion created successfully";
-            return $result; // Return the discussion ID
+            return $result;
         } else {
             $_SESSION['error'] = "Failed to create discussion";
             return false;
         }
     }
     
-    public function updateDiscussion($discussionId, $userId, $title, $content) {
+    public function updateDiscussion($discussionId, $userId, $title, $content, $recipe_id = null) {
         // Check if user is logged in
         if (!isLoggedIn()) {
             return "You must be logged in to edit a discussion";
@@ -149,8 +149,7 @@ class DiscussionController {
         }
         
         // Update discussion
-        $result = $this->discussion->updateDiscussion($discussionId, $title, $content);
-        
+        $result = $this->discussion->updateDiscussion($discussionId, $title, $content, $recipe_id);
         if ($result) {
             $_SESSION['success'] = "Discussion updated successfully";
             return true;
