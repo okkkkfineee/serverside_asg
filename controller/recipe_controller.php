@@ -17,6 +17,10 @@ class RecipeController {
         return $this->recipeModel->getAllRecipes();
     }
 
+    public function filterRecipes($title, $cuisine, $difficulty) {
+        return $this->recipeModel->filterRecipes($title, $cuisine, $difficulty);
+    }
+
     public function getUserRecipes($user_id) {
         return $this->recipeModel->getUserRecipes($user_id);
     }

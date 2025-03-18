@@ -8,13 +8,15 @@ require '../controller/recipe_controller.php';
 
 $recipeController = new RecipeController($conn);
 
-$recipes = $recipeController->getAllRecipes();
+$title = isset($_POST['titleType']) ? htmlspecialchars(trim($_POST['titleType'])) : '';
+$cuisine = $_POST['cuisineType'] ?? '';
+$difficulty = $_POST['difficultyLevel'] ?? '';
 
-$counter = 1;
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$limit = 20;
-$offset = ($page - 1) * $limit;
-
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $recipes = $recipeController->filterRecipes($title, $cuisine, $difficulty);
+} else {
+    $recipes = $recipeController->filterRecipes('', '', '');
+}
 ?>
 
 <!DOCTYPE html>

@@ -16,7 +16,6 @@ class Recipe {
         return $result->fetch_assoc();
     }
 
-
     public function getAllRecipes() {
         $sql = "SELECT * FROM recipe";
         $stmt = $this->conn->prepare($sql);
@@ -24,8 +23,43 @@ class Recipe {
         $result = $stmt->get_result();
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-    
 
+    public function filterRecipes($title, $cuisine, $difficulty) {
+        $query = "SELECT * FROM recipe WHERE 1=1";
+        $params = [];
+        $types = "";
+
+        if (!empty($title)) {
+            $query .= " AND title LIKE ?";
+            $params[] = "%$title%";
+            $types .= "s";
+        }
+        if (!empty($cuisine)) {
+            $query .= " AND cuisine = ?";
+            $params[] = $cuisine;
+            $types .= "s"; 
+        }
+        if (!empty($difficulty)) {
+            $query .= " AND difficulty = ?";
+            $params[] = $difficulty;
+            $types .= "i";
+        }
+
+        $stmt = $this->conn->prepare($query);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $recipes = [];
+        while ($row = $result->fetch_assoc()) {
+            $recipes[] = $row;
+        }
+        
+        return $recipes;
+    }
+    
     public function getUserRecipes($user_id) {
         $sql = "SELECT * FROM recipe WHERE user_id = ?";
         $stmt = $this->conn->prepare($sql);
