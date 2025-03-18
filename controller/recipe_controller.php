@@ -13,6 +13,10 @@ class RecipeController {
         return $this->recipeModel->getRecipe($recipe_id);
     }
 
+    public function getAllRecipes() {
+        return $this->recipeModel->getAllRecipes();
+    }
+
     public function getUserRecipes($user_id) {
         return $this->recipeModel->getUserRecipes($user_id);
     }
@@ -21,8 +25,12 @@ class RecipeController {
         return $this->recipeModel->getOwnRecipeInfo($recipe_id, $user_id);
     }
 
-    public function manageRecipe($action, $recipe_id, $user_id, $title, $image, $description, $cuisine, $difficulty, $cooking_time, $steps, $created_time) {
-        return $this->recipeModel->manageRecipe($action, $recipe_id, $user_id, $title, $image, $description, $cuisine, $difficulty, $cooking_time, $steps, $created_time);
+    public function getRecipeInfo($recipe_id) {
+        return $this->recipeModel->getRecipeInfo($recipe_id);
+    }
+
+    public function manageRecipe($action, $recipe_id, $user_id, $title, $image, $description, $cuisine, $difficulty, $cooking_time, $ingredients, $steps, $created_time) {
+        return $this->recipeModel->manageRecipe($action, $recipe_id, $user_id, $title, $image, $description, $cuisine, $difficulty, $cooking_time, $ingredients, $steps, $created_time);
     }
 
     public function deleteRecipe($recipe_id) {

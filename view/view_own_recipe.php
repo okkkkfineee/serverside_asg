@@ -1,8 +1,6 @@
 <?php
-if (session_status() == PHP_SESSION_NONE){
-    session_start();
-}
 
+require '../includes/auth.php';
 require '../config/db_connection.php';
 include '../controller/recipe_controller.php';
  
@@ -13,7 +11,8 @@ if (!isset($_GET['recipe_id']) || empty($_GET['recipe_id'])) {
 }
 
 $recipe_id = intval($_GET['recipe_id']);
-$recipe = $recipeController->getRecipeInfo($recipe_id);
+$user_id = $_SESSION['user_id'];
+$recipe = $recipeController->getOwnRecipeInfo($recipe_id, $user_id);
 
 if (!$recipe) {
     die("Recipe not found!");
@@ -73,7 +72,7 @@ if (!$recipe) {
             </div>
 
             <div class="text-center mt-4" >
-                <a href="recipe_list.php" class="btn btn-success">Back</a>
+                <a href="profile.php" class="btn btn-success">Back</a>
             </div>
         </div>
     </div>

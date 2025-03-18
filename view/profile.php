@@ -100,7 +100,7 @@ $recipes = $recipeController->getUserRecipes($_SESSION['user_id']);
                                         <div class="card-body">
                                             <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
                                             <p class="card-text"><?php echo htmlspecialchars(substr($recipe['description'], 0, 80)) . '...'; ?></p>
-                                            <a href="view_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary">View Recipe</a>
+                                            <a href="view_own_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary">View Recipe</a>
                                         </div>
                                     </div>
                                 </div>

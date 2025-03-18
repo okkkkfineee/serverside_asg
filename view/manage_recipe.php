@@ -35,6 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cuisine = mysqli_real_escape_string($conn, $_POST['cuisine']);
     $difficulty = mysqli_real_escape_string($conn, $_POST['difficulty']);
     $cooking_time = mysqli_real_escape_string($conn, $_POST['cooking_time']);
+    $ingredients = array_map(function($ingredient) use ($conn) {
+        return mysqli_real_escape_string($conn, $ingredient);
+    }, $_POST['ingredients']);
     $steps = array_map(function($step) use ($conn) {
         return mysqli_real_escape_string($conn, $step);
     }, $_POST['steps']);
@@ -49,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'Add') {
         $created_time = date("Y-m-d H:i:s");
         
-        $result = $recipeController->manageRecipe("add", "", $user_id, $title, $image, $description, $cuisine, $difficulty, $cooking_time, $steps, $created_time);
+        $result = $recipeController->manageRecipe("add", "", $user_id, $title, $image, $description, $cuisine, $difficulty, $cooking_time, $ingredients, $steps,  $created_time);
         if ($result === true) {
             echo "<script>alert('Recipe added successfully!');
             window.location.href = 'profile';</script>";
@@ -57,8 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = $result;
         }
     } elseif (isset($_POST['action']) && $_POST['action'] === 'Edit') {
-        
-        $result = $recipeController->manageRecipe("update", $recipe_id, $user_id, $title, $image, $description, $cuisine, $difficulty, $cooking_time, $steps, "");
+        $result = $recipeController->manageRecipe("update", $recipe_id, $user_id, $title, $image, $description, $cuisine, $difficulty, $cooking_time, $ingredients, $steps, "");
         if ($result === true) {
             echo "<script>alert('Recipe updated successfully!');
             window.location.href = 'profile';</script>";
@@ -118,14 +120,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Difficulty (Low-1 ... High-5)</label>
-                        <input type="number" name="difficulty" class="form-control" min="1" max="5" required>
+                        <label class="form-label">Difficulty</label>
+                        <select name="difficulty" class="form-select" required>
+                            <option value="">-- Select Difficulty --</option>
+                            <option value="1">1 -- Very Low</option>
+                            <option value="2">2 -- Low</option>
+                            <option value="3">3 -- Medium</option>
+                            <option value="4">4 -- High</option>
+                            <option value="5">5 -- Very High</option>
+                        </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Cooking Time (minutes)</label>
                         <input type="number" name="cooking_time" class="form-control" min="1" required>
                     </div>
                 </div>
+
+                <div class="mb-3">
+                <label class="form-label">Ingredients</label>
+                <div id="ingredientsContainer">
+                    <div class="mb-2 d-flex align-items-center">
+                        <input type="text" name="ingredients[]" class="form-control" placeholder="Ingredient 1" required>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary mt-2" onclick="addIngredient()">Add Ingredient</button>
+            </div>
 
                 <div class="mb-3">
                     <label class="form-label">Steps</label>
@@ -172,8 +191,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Difficulty (Low-1 ... High-5)</label>
-                        <input type="number" name="difficulty" class="form-control" min="1" max="5" value="<?= $recipe_info['difficulty'] ?>" required>
+                        <label class="form-label">Difficulty</label>
+                        <select name="difficulty" class="form-select" required>
+                            <option value="1" <?= ($recipe_info['difficulty'] == '1') ? 'selected' : '' ?>>1 -- Very Low</option>
+                            <option value="2" <?= ($recipe_info['difficulty'] == '2') ? 'selected' : '' ?>>2 -- Low</option>
+                            <option value="3" <?= ($recipe_info['difficulty'] == '3') ? 'selected' : '' ?>>3 -- Medium</option>
+                            <option value="4" <?= ($recipe_info['difficulty'] == '4') ? 'selected' : '' ?>>4 -- High</option>
+                            <option value="5" <?= ($recipe_info['difficulty'] == '5') ? 'selected' : '' ?>>5 -- Very High</option>
+                        </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Cooking Time (minutes)</label>
@@ -181,7 +206,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-
+                <div class="mb-3">
+                    <label class="form-label">Ingredients</label>
+                    <div id="ingredientsContainer">
+                        <?php foreach ($recipe_info['ingredients'] as $index => $ingredient): ?>
+                            <div class="mb-2 d-flex align-items-center">
+                                <input type="text" name="ingredients[]" class="form-control" value="<?= htmlspecialchars($ingredient) ?>" required>
+                                <?php if ($index > 0): ?>
+                                    <button type="button" class="btn btn-danger ms-2" onclick="removeIngredient(this)">X</button>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <button type="button" class="btn btn-secondary mt-2" onclick="addIngredient()">Add Ingredient</button>
+                </div>
                 <div class="mb-3">
                     <label class="form-label">Steps</label>
                     <div id="stepsContainer">
@@ -196,13 +234,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <button type="button" class="btn btn-secondary mt-2" onclick="addStep()">Add Step</button>
                 </div>
-
+                
+                <div class="button-container">
                 <button type="submit" name="action" value="Edit" class="btn btn-primary">Update Changes</button>
+                <a href="profile.php#" class="btn btn-secondary">Discard Changes</a>
+            </div>
             </form>
         <?php endif; ?>
     </div>
 
     <script>
+        function addIngredient() {
+            const ingredientsContainer = document.getElementById('ingredientsContainer');
+            const ingredientsCount = ingredientsContainer.getElementsByTagName('input').length + 1;
+            
+            const newIngredient = document.createElement('div');
+            newIngredient.classList.add('mb-2', 'd-flex', 'align-items-center');
+            newIngredient.innerHTML = `
+                <input type="text" name="ingredients[]" class="form-control" placeholder="Ingredient ${ingredientsCount}" required>
+                <button type="button" class="btn btn-danger ms-2" onclick="removeIngredient(this)">X</button>
+            `;
+            ingredientsContainer.appendChild(newIngredient);
+        }
+        
         function addStep() {
             const stepContainer = document.getElementById('stepsContainer');
             const stepCount = stepContainer.getElementsByTagName('input').length + 1;
@@ -217,6 +271,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         function removeStep(button) {
+            button.parentElement.remove();
+        }
+
+
+        function removeIngredient(button) {
             button.parentElement.remove();
         }
 

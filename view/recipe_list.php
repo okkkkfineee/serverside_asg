@@ -1,10 +1,14 @@
 <?php
+if (session_status() == PHP_SESSION_NONE){
+    session_start();
+}
 
-session_start();
 require '../config/db_connection.php';
 require '../controller/recipe_controller.php';
 
 $recipeController = new RecipeController($conn);
+
+$recipes = $recipeController->getAllRecipes();
 
 $counter = 1;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -94,8 +98,28 @@ $offset = ($page - 1) * $limit;
             </div>
             <br>
 
-            <div class="" id="data-container">
-
+            <h4 class="mb-3 py-2 text-center">Recipes</h4>
+            <div class="container" id="data-container">
+                <div class="row justify-content-center">
+                    <?php if (empty($recipes)) : ?>
+                        <div class="text-center mt-5">
+                            <p>No recipes yet.</p>
+                        </div>
+                    <?php else : ?>
+                        <?php foreach ($recipes as $recipe) : ?>
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4 d-flex justify-content-center">
+                            <div class="card shadow-sm border" style="width: 100%; max-width: 20rem; height: 100%;">
+                                <img src="../uploads/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top rounded-top" alt="Recipe Image" style="width: 100%; height: 200px; object-fit: cover;">
+                                <div class="card-body text-start p-3 d-flex flex-column justify-content-between" style=" flex-grow: 1;">
+                                    <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
+                                    <p class="card-text">Cuisine Type: <?php echo htmlspecialchars($recipe['cuisine']); ?><br> Difficulty: <?php echo htmlspecialchars($recipe['difficulty']); ?></p>
+                                    <a href="view_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary mt-auto">View    Recipe</a>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
             <div id="pagination-container">
 
