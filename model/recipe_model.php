@@ -146,6 +146,7 @@ class Recipe {
             return $result;
         }
     
+        if ($action === 'add') {
         // Handle Image Upload (only jpg, jpeg, png)
         if (!empty($image)) {
             $target_dir = "../uploads/";
@@ -154,13 +155,16 @@ class Recipe {
             if (!in_array($image_file_type, ['jpg', 'jpeg', 'png'])) {
                 return "Only JPG, JPEG, and PNG files are allowed.";
             }
+
+            if ($_FILES["image"]["error"] !== UPLOAD_ERR_OK) {
+                return "File upload error: " . $_FILES["image"]["error"];
+            }
         
             if (!move_uploaded_file($_FILES["image"]["tmp_name"], $image_path)) {
                 return "Error uploading image.";
             }
         }
-    
-        if ($action === 'add') {
+
             $stmt = $this->conn->prepare("INSERT INTO recipe (user_id, title, description, images, cuisine, difficulty, cooking_time, created_time) 
                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param("issssiis", $user_id, $title, $description, $image, $cuisine, $difficulty, $cooking_time, $created_time);
@@ -187,8 +191,30 @@ class Recipe {
                 return $result;
             }
         } elseif ($action === 'update') {
+            // Handle Image Upload (only jpg, jpeg, png)
+            if (!empty($_FILES["image"]["name"])) {
+                $target_dir = "../uploads/";
+                $image = $_FILES["image"]["name"];
+                $image_path = $target_dir . basename($image);
+                $image_file_type = strtolower(pathinfo($image_path, PATHINFO_EXTENSION));
+
+                if (!in_array($image_file_type, ['jpg', 'jpeg', 'png'])) {
+                    return "Only JPG, JPEG, and PNG files are allowed.";
+                }
+            
+                // Check for upload errors
+                if ($_FILES["image"]["error"] !== UPLOAD_ERR_OK) {
+                    return "File upload error: " . $_FILES["image"]["error"];
+                }
+
+                if (!move_uploaded_file($_FILES["image"]["tmp_name"], $image_path)) {
+                    return "Error uploading image.";
+                }
+            }
+
+            $description = stripslashes($description);
             $stmt = $this->conn->prepare("UPDATE recipe SET title = ?, description = ?, images = ?, cuisine = ?, difficulty = ?, cooking_time = ? WHERE recipe_id = ?");
-            $stmt->bind_param("sssiiii", $title, $description, $image, $cuisine, $difficulty, $cooking_time, $recipe_id);
+            $stmt->bind_param("ssssiii", $title, $description, $image, $cuisine, $difficulty, $cooking_time, $recipe_id);
         
             if ($stmt->execute()) {
                 $existing_steps = [];
@@ -225,7 +251,7 @@ class Recipe {
                     $existing_ingredients[$row['ingredient_num']] = true;
                 }
 
-                $stmt_update_ingredients = $this->conn->prepare("UPDATE ingredients SET material = ? WHERE recipe_id = ? AND ingredientl_num = ?");
+                $stmt_update_ingredients = $this->conn->prepare("UPDATE ingredients SET material = ? WHERE recipe_id = ? AND ingredient_num = ?");
                 $stmt_insert_ingredients = $this->conn->prepare("INSERT INTO ingredients (recipe_id, ingredient_num, material) VALUES (?, ?, ?)");
 
                 foreach ($ingredients as $index => $material) {
@@ -238,13 +264,16 @@ class Recipe {
                         $stmt_insert_ingredients->execute();
                     }
                 }
+
+                $steps_count = count($steps);
+                $ingredients_count = count($ingredients);
             
                 $stmt_delete = $this->conn->prepare("DELETE FROM steps WHERE recipe_id = ? AND step_number > ?");
-                $stmt_delete->bind_param("ii", $recipe_id, count($steps));
+                $stmt_delete->bind_param("ii", $recipe_id, $steps_count);
                 $stmt_delete->execute();
 
                 $stmt_delete_ingredients = $this->conn->prepare("DELETE FROM ingredients WHERE recipe_id = ? AND ingredient_num > ?");
-                $stmt_delete_ingredients->bind_param("ii", $recipe_id, count($ingredients));
+                $stmt_delete_ingredients->bind_param("ii", $recipe_id, $ingredients_count);
                 $stmt_delete_ingredients->execute();
         
                 return true;

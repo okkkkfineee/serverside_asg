@@ -37,25 +37,36 @@ if (!$recipe) {
 
     <div class="container mt-4">
         <div class="p-4">
-            <div class="d-flex justify-content-between align-items-start gap-4">
+            <div class="d-flex align-items-start justify-content-between gap-4">
                 <div>
                     <h1 class="mb-3"><?php echo htmlspecialchars($recipe['title']); ?></h1>
                     <p class="lead">
                         <?php echo nl2br(htmlspecialchars($recipe['description'])); ?>
                     </p>
                     <p><strong>Cuisine:</strong> <?php echo htmlspecialchars($recipe['cuisine']); ?></p>
+                    <p><strong>Diffivulty Level:</strong> 
+                    <?php 
+                    $difficulty_labels = [
+                    1 => "1 -- Beginner-Friendly",
+                    2 => "2 -- Easy ",
+                    3 => "3 -- Moderate ",
+                    4 => "4 -- Challenging",
+                    5 => "5 -- Expert-Level"
+                    ];
+                    $difficulty = htmlspecialchars($recipe['difficulty']);
+                    echo isset($difficulty_labels[$difficulty]) ? $difficulty_labels[$difficulty] : "Unknown";?></p>
                     <p><strong>Cooking Time:</strong> <?php echo htmlspecialchars($recipe['cooking_time']); ?> mins</p>
                 </div>
                 <?php if (!empty($recipe['images'])): ?>
                     <div class="ms-3">
                         <img src="../uploads/<?php echo htmlspecialchars($recipe['images']); ?>" 
                              alt="<?php echo htmlspecialchars($recipe['title']); ?>" 
-                             class="img-fluid rounded shadow-sm" style="width: 200px; height: auto;">
+                             class="rounded shadow-sm img-fluid" style="width: 200px; height: auto;">
                     </div>
                 <?php endif; ?>
             </div>
 
-            <div class="mt-4 p-3" style="background-color: grey; color: white; border-radius: 10px;">
+            <div class="p-3 mt-4" style="background-color: grey; color: white; border-radius: 10px;">
                 <h3>Ingredients:</h3>
                 <ul>
                     <?php foreach ($recipe['ingredients'] as $ingredient): ?>
@@ -63,7 +74,7 @@ if (!$recipe) {
                     <?php endforeach; ?>
                 </ul>
             </div>
-            <div class="mt-4 p-3" style="background-color: grey; color: white; border-radius: 10px;">
+            <div class="p-3 mt-4" style="background-color: grey; color: white; border-radius: 10px;">
                 <h3>Instructions:</h3>
                 <ol>
                     <?php foreach ($recipe['steps'] as $step): ?>

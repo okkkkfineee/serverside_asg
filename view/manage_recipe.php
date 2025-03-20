@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container mt-4">
         <?php if ($type === "add"): ?>
-            <h2 class="mb-3 text-center">Add New Recipe</h2>
+            <h2 class="text-center mb-3">Add New Recipe</h2>
             <form action="manage_recipe?type=add" method="POST" enctype="multipart/form-data">
                 <div class="row mb-3">
                     <div class="col-md-6">
@@ -123,11 +123,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="form-label">Difficulty</label>
                         <select name="difficulty" class="form-select" required>
                             <option value="">-- Select Difficulty --</option>
-                            <option value="1">1 -- Very Low</option>
-                            <option value="2">2 -- Low</option>
-                            <option value="3">3 -- Medium</option>
-                            <option value="4">4 -- High</option>
-                            <option value="5">5 -- Very High</option>
+                            <option value="1">1 -- Beginner-Friendly</option>
+                            <option value="2">2 -- Easy</option>
+                            <option value="3">3 -- Moderate</option>
+                            <option value="4">4 -- Challenging</option>
+                            <option value="5">5 -- Expert-Level</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                 <label class="form-label">Ingredients</label>
                 <div id="ingredientsContainer">
-                    <div class="mb-2 d-flex align-items-center">
+                    <div class="d-flex align-items-center mb-2">
                         <input type="text" name="ingredients[]" class="form-control" placeholder="Ingredient 1" required>
                     </div>
                 </div>
@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label class="form-label">Steps</label>
                     <div id="stepsContainer">
-                        <div class="mb-2 d-flex align-items-center">
+                        <div class="d-flex align-items-center mb-2">
                             <input type="text" name="steps[]" class="form-control" placeholder="Step 1" required>
                         </div>
                     </div>
@@ -159,10 +159,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button type="submit" name="action" value="Add" class="btn btn-primary">Submit Recipe</button>
             </form>
         <?php elseif ($type === "edit"): ?>
-            <h2 class="mb-3 text-center">Edit Recipe</h2>
+            <h2 class="text-center mb-3">Edit Recipe</h2>
             <form action="manage_recipe?type=edit&recipe_id=<?= $recipe_id ?>" method="POST" enctype="multipart/form-data">
                 <div class="row mb-3">
                     <div class="col-md-6">
+                        <input type="hidden" name="recipe_id" value="<?= $recipe_id ?>">
                         <label class="form-label">Title</label>
                         <input type="text" name="title" class="form-control" value="<?= htmlspecialchars($recipe_info['title']) ?>" required>
                     </div>
@@ -193,11 +194,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-md-4">
                         <label class="form-label">Difficulty</label>
                         <select name="difficulty" class="form-select" required>
-                            <option value="1" <?= ($recipe_info['difficulty'] == '1') ? 'selected' : '' ?>>1 -- Very Low</option>
-                            <option value="2" <?= ($recipe_info['difficulty'] == '2') ? 'selected' : '' ?>>2 -- Low</option>
-                            <option value="3" <?= ($recipe_info['difficulty'] == '3') ? 'selected' : '' ?>>3 -- Medium</option>
-                            <option value="4" <?= ($recipe_info['difficulty'] == '4') ? 'selected' : '' ?>>4 -- High</option>
-                            <option value="5" <?= ($recipe_info['difficulty'] == '5') ? 'selected' : '' ?>>5 -- Very High</option>
+                            <option value="1" <?= ($recipe_info['difficulty'] == '1') ? 'selected' : '' ?>>1 -- Beginner-Friendly</option>
+                            <option value="2" <?= ($recipe_info['difficulty'] == '2') ? 'selected' : '' ?>>2 -- Easy</option>
+                            <option value="3" <?= ($recipe_info['difficulty'] == '3') ? 'selected' : '' ?>>3 -- Moderate</option>
+                            <option value="4" <?= ($recipe_info['difficulty'] == '4') ? 'selected' : '' ?>>4 -- Challenging</option>
+                            <option value="5" <?= ($recipe_info['difficulty'] == '5') ? 'selected' : '' ?>>5 -- Expert-Level</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -210,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="form-label">Ingredients</label>
                     <div id="ingredientsContainer">
                         <?php foreach ($recipe_info['ingredients'] as $index => $ingredient): ?>
-                            <div class="mb-2 d-flex align-items-center">
+                            <div class="d-flex align-items-center mb-2">
                                 <input type="text" name="ingredients[]" class="form-control" value="<?= htmlspecialchars($ingredient) ?>" required>
                                 <?php if ($index > 0): ?>
                                     <button type="button" class="btn btn-danger ms-2" onclick="removeIngredient(this)">X</button>
@@ -224,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="form-label">Steps</label>
                     <div id="stepsContainer">
                         <?php foreach ($recipe_info['steps'] as $index => $step): ?>
-                            <div class="mb-2 d-flex align-items-center">
+                            <div class="d-flex align-items-center mb-2">
                                 <input type="text" name="steps[]" class="form-control" value="<?= htmlspecialchars($step) ?>" required>
                                 <?php if ($index > 0): ?>
                                     <button type="button" class="btn btn-danger ms-2" onclick="removeStep(this)">X</button>
