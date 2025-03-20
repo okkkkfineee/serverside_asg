@@ -46,15 +46,31 @@ if (!$recipe) {
                     <p><strong>Diffivulty Level:</strong>
                     <?php 
                     $difficulty_labels = [
-                    1 => "1 -- Beginner-Friendly",
-                    2 => "2 -- Easy ",
-                    3 => "3 -- Moderate ",
-                    4 => "4 -- Challenging",
-                    5 => "5 -- Expert-Level"
+                    1 => "Beginner-Friendly",
+                    2 => "Easy ",
+                    3 => "Moderate ",
+                    4 => "Challenging",
+                    5 => "Expert-Level"
                     ];
                     $difficulty = htmlspecialchars($recipe['difficulty']);
-                    echo isset($difficulty_labels[$difficulty]) ? $difficulty_labels[$difficulty] : "Unknown";?></p>
-                    <p><strong>Cooking Time:</strong> <?php echo htmlspecialchars($recipe['cooking_time']); ?> mins</p>
+                    echo isset($difficulty_labels[$difficulty]) ? $difficulty_labels[$difficulty] : "-";?></p>
+                    <p><strong>Cooking Time:</strong> 
+                    <?php
+                    $cookingTime = (int) $recipe['cooking_time'];
+
+                    if ($cookingTime >= 60) {
+                        $hours = floor($cookingTime / 60); 
+                        $minutes = $cookingTime % 60;
+                    
+                        if ($minutes > 0) {
+                            $formattedTime = "{$hours} hours {$minutes} minutes";
+                        } else {
+                            $formattedTime = "{$hours} hours";
+                        }
+                    } else {
+                        $formattedTime = "{$cookingTime} minutes";
+                    }
+                    echo htmlspecialchars($formattedTime); ?></p>
                 </div>
                 <?php if (!empty($recipe['images'])): ?>
                     <div class="ms-3">

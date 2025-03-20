@@ -8,15 +8,24 @@ require '../controller/recipe_controller.php';
 
 $recipeController = new RecipeController($conn);
 
-$title = isset($_POST['titleType']) ? htmlspecialchars(trim($_POST['titleType'])) : '';
-$cuisine = $_POST['cuisineType'] ?? '';
-$difficulty = $_POST['difficultyLevel'] ?? '';
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $recipes = $recipeController->filterRecipes($title, $cuisine, $difficulty);
-} else {
-    $recipes = $recipeController->filterRecipes('', '', '');
+    $title = isset($_POST['titleType']) ? htmlspecialchars(trim($_POST['titleType'])) : '';
+    $cuisine = $_POST['cuisineType'] ?? '';
+    $difficulty = $_POST['difficultyLevel'] ?? '';
+
+    $_SESSION['titleType'] = $title;
+    $_SESSION['cuisineType'] = $cuisine;
+    $_SESSION['difficultyLevel'] = $difficulty;
+
+    header("Location: recipe_list.php");
+    exit();
 }
+
+$title = $_SESSION['titleType'] ?? '';
+$cuisine = $_SESSION['cuisineType'] ?? '';
+$difficulty = $_SESSION['difficultyLevel'] ?? '';
+
+$recipes = $recipeController->filterRecipes($title, $cuisine, $difficulty);
 ?>
 
 <!DOCTYPE html>
@@ -120,7 +129,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <img src="../uploads/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top rounded-top" alt="Recipe Image" style="width: 100%; height: 200px; object-fit: cover;">
                                 <div class="d-flex flex-column card-body justify-content-between p-3 text-start" style=" flex-grow: 1;">
                                     <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
-                                    <p class="card-text">Cuisine Type: <?php echo htmlspecialchars($recipe['cuisine']); ?><br> Difficulty: <?php echo htmlspecialchars($recipe['difficulty']); ?></p>
+                                    <p class="card-text">Cuisine Type: <?php echo htmlspecialchars($recipe['cuisine']); ?><br> Difficulty: 
+                                    <?php 
+                                    $difficulty_labels = [
+                                    1 => "Beginner-Friendly",
+                                    2 => "Easy ",
+                                    3 => "Moderate ",
+                                    4 => "Challenging",
+                                    5 => "Expert-Level"
+                                    ];
+                                    $difficulty = htmlspecialchars($recipe['difficulty']);
+                                    echo isset($difficulty_labels[$difficulty]) ? $difficulty_labels[$difficulty] : "-";?></p>
                                     <a href="view_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary mt-auto">View    Recipe</a>
                                 </div>
                             </div>
