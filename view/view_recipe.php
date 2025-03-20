@@ -60,8 +60,8 @@ if (!$recipe) {
                     $cookingTime = (int) $recipe['cooking_time'];
 
                     if ($cookingTime >= 60) {
-                        $hours = floor($cookingTime / 60);  // Get whole hours
-                        $minutes = $cookingTime % 60;       // Get remaining minutes
+                        $hours = floor($cookingTime / 60);
+                        $minutes = $cookingTime % 60; 
                     
                         if ($minutes > 0) {
                             $formattedTime = "{$hours} hours {$minutes} minutes";
@@ -77,7 +77,7 @@ if (!$recipe) {
                     <div class="ms-3">
                         <img src="../uploads/<?php echo htmlspecialchars($recipe['images']); ?>" 
                              alt="<?php echo htmlspecialchars($recipe['title']); ?>" 
-                             class="rounded shadow-sm img-fluid" style="width: 200px; height: auto;">
+                             class="rounded shadow-sm img-fluid" style="width: 200px; height: auto; object-fit: cover;">
                     </div>
                 <?php endif; ?>
             </div>

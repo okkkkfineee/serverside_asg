@@ -140,16 +140,13 @@ $recipes = $recipeController->filterRecipes($title, $cuisine, $difficulty);
                                     ];
                                     $difficulty = htmlspecialchars($recipe['difficulty']);
                                     echo isset($difficulty_labels[$difficulty]) ? $difficulty_labels[$difficulty] : "-";?></p>
-                                    <a href="view_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary mt-auto">View    Recipe</a>
+                                    <a href="view_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary mt-auto">View sRecipe</a>
                                 </div>
                             </div>
                         </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
-            </div>
-            <div id="pagination-container">
-
             </div>
         </div>
     </div>
