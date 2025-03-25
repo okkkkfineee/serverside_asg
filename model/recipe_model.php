@@ -145,15 +145,22 @@ class Recipe {
             $result = "Description must not exceed 50 words.";
             return $result;
         }
+
+        $target_dir = "../uploads/";
+        $allowedExtensions = ['jpg', 'jpeg', 'png'];
+        $maxFileSize = 2 * 1024 * 1024; // 2MB
     
         if ($action === 'add') {
-        // Handle Image Upload (only jpg, jpeg, png)
+        // Handle Image Upload
         if (!empty($image)) {
-            $target_dir = "../uploads/";
             $image_path = $target_dir . $image;
             $image_file_type = strtolower(pathinfo($image_path, PATHINFO_EXTENSION));
-            if (!in_array($image_file_type, ['jpg', 'jpeg', 'png'])) {
+            if (!in_array($image_file_type, $allowedExtensions)) {
                 return "Only JPG, JPEG, and PNG files are allowed.";
+            }
+
+            if ($_FILES['image']['size'] > $maxFileSize) {
+                return "File size exceeds the maximum limit of 2MB.";
             }
 
             if ($_FILES["image"]["error"] !== UPLOAD_ERR_OK) {
@@ -191,15 +198,28 @@ class Recipe {
                 return $result;
             }
         } elseif ($action === 'update') {
+            //Retrieve old image before update
+            $oldRecipe = $this->getRecipe($recipe_id);
+            $old_image = $oldRecipe ? $oldRecipe['images'] : null;
             // Handle Image Upload (only jpg, jpeg, png)
             if (!empty($_FILES["image"]["name"])) {
-                $target_dir = "../uploads/";
-                $image = $_FILES["image"]["name"];
-                $image_path = $target_dir . basename($image);
+                $image = $user_id . '_' . basename($_FILES["image"]["name"]);
+                $image_path = $target_dir . $image;
                 $image_file_type = strtolower(pathinfo($image_path, PATHINFO_EXTENSION));
 
                 if (!in_array($image_file_type, ['jpg', 'jpeg', 'png'])) {
                     return "Only JPG, JPEG, and PNG files are allowed.";
+                }
+
+                if ($_FILES['image']['size'] > $maxFileSize) {
+                    return "File size exceeds the maximum limit of 2MB.";
+                }
+
+                if (!empty($old_image)) {
+                    $oldFilePath = $target_dir . $old_image;
+                    if (file_exists($oldFilePath) && !is_dir($oldFilePath)) {
+                        unlink($oldFilePath);
+                    }
                 }
             
                 // Check for upload errors

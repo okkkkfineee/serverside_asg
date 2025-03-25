@@ -29,8 +29,6 @@ if ($type === "delete" && isset($_GET['recipe_id'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = mysqli_real_escape_string($conn, $_SESSION['user_id']);
     $title = mysqli_real_escape_string($conn, $_POST['title']);
-    $image = $user_id . '_' . basename($_FILES["image"]["name"]);
-    $image = $_FILES['image']['name'] ? $_FILES['image']['name'] : null;
     $description = mysqli_real_escape_string($conn, $_POST['description']);
     $cuisine = mysqli_real_escape_string($conn, $_POST['cuisine']);
     $difficulty = mysqli_real_escape_string($conn, $_POST['difficulty']);
@@ -42,11 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return mysqli_real_escape_string($conn, $step);
     }, $_POST['steps']);
 
-    if ($image) {
-        $image = $user_id . '_' . basename(basename($image));
+    $existingRecipe = $recipeController->getRecipe($recipe_id);
+    $old_image = $existingRecipe ? $existingRecipe['images'] : null;
+
+    if (!empty($_FILES["image"]["name"])) {
+        $image = $user_id . '_' . basename($_FILES["image"]["name"]);
     } else {
-        $existingImage = $recipeController->getRecipe($recipe_id); 
-        $image = $existingImage['images'];
+        $image = $old_image;
     }
 
     if (isset($_POST['action']) && $_POST['action'] === 'Add') {
