@@ -7,7 +7,7 @@
             <li class="nav-item"><a class="nav-link" href="recipe_list?page=1">Recipes</a></li>
             <li class="nav-item"><a class="nav-link" href="competitions">Events</a></li>
             <li class="nav-item"><a class="nav-link" href="meal_planner">Meal Planner</a></li>
-            <li class="nav-item"><a class="nav-link" href="forums">Forums</a></li>
+            <li class="nav-item"><a class="nav-link" href="discussions.php">Forums</a></li>
         </ul>
         <div class="pe-2">
             <?php if (isset($_SESSION['user_id']) && $_SESSION['roles']): ?>
