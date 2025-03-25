@@ -1,8 +1,6 @@
 <?php
-if (session_status() == PHP_SESSION_NONE){
-    session_start();
-}
 
+require '../includes/auth.php';
 require '../config/db_connection.php';
 include '../controller/recipe_controller.php';
  
@@ -13,7 +11,8 @@ if (!isset($_GET['recipe_id']) || empty($_GET['recipe_id'])) {
 }
 
 $recipe_id = intval($_GET['recipe_id']);
-$recipe = $recipeController->getRecipeInfo($recipe_id);
+$user_id = $_SESSION['user_id'];
+$recipe = $recipeController->getOwnRecipeInfo($recipe_id, $user_id);
 
 if (!$recipe) {
     die("Recipe not found!");
@@ -44,7 +43,7 @@ if (!$recipe) {
                         <?php echo nl2br(htmlspecialchars($recipe['description'])); ?>
                     </p>
                     <p><strong>Cuisine:</strong> <?php echo htmlspecialchars($recipe['cuisine']); ?></p>
-                    <p><strong>Diffivulty Level:</strong> 
+                    <p><strong>Diffivulty Level:</strong>
                     <?php 
                     $difficulty_labels = [
                     1 => "Beginner-Friendly",
@@ -55,12 +54,12 @@ if (!$recipe) {
                     ];
                     $difficulty = htmlspecialchars($recipe['difficulty']);
                     echo isset($difficulty_labels[$difficulty]) ? $difficulty_labels[$difficulty] : "-";?></p>
-                    <p><strong>Cooking Time:</strong>
+                    <p><strong>Cooking Time:</strong> 
                     <?php
                     $cookingTime = (int) $recipe['cooking_time'];
 
                     if ($cookingTime >= 60) {
-                        $hours = floor($cookingTime / 60);
+                        $hours = floor($cookingTime / 60); 
                         $minutes = $cookingTime % 60; 
                     
                         if ($minutes > 0) {
@@ -71,7 +70,7 @@ if (!$recipe) {
                     } else {
                         $formattedTime = "{$cookingTime} minutes";
                     }
-                    echo htmlspecialchars($formattedTime); ?></p></p>
+                    echo htmlspecialchars($formattedTime); ?></p>
                 </div>
                 <?php if (!empty($recipe['images'])): ?>
                     <div class="ms-3">
@@ -100,7 +99,7 @@ if (!$recipe) {
             </div>
 
             <div class="text-center mt-4" >
-                <a href="recipe_list.php" class="btn btn-success">Back</a>
+                <a href="profile.php" class="btn btn-success">Back</a>
             </div>
         </div>
     </div>

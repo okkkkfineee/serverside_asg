@@ -94,13 +94,13 @@ $recipes = $recipeController->getUserRecipes($_SESSION['user_id']);
                             </div>
                         <?php else : ?>
                             <?php foreach ($recipes as $recipe) : ?>
-                                <div class="col-md-3 mb-3">
-                                    <div class="card shadow-sm">
+                                <div class="col-lg-4 col-md-6 col-sm-12 col-xl-3 justify-content-center mb-4">
+                                    <div class="card border shadow-sm" style="width: 100%; max-width: 20rem; height: 100%;">
                                         <img src="../uploads/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top" alt="Recipe Image" width="50" height="230">
-                                        <div class="card-body">
+                                        <div class="d-flex flex-column card-body justify-content-between p-3 text-start" >
                                             <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
                                             <p class="card-text"><?php echo htmlspecialchars(substr($recipe['description'], 0, 80)) . '...'; ?></p>
-                                            <a href="view_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary">View Recipe</a>
+                                            <a href="view_own_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary">View Recipe</a>
                                         </div>
                                     </div>
                                 </div>
@@ -127,10 +127,10 @@ $recipes = $recipeController->getUserRecipes($_SESSION['user_id']);
                             </div>
                         <?php else : ?>
                             <?php foreach ($recipes as $recipe) : ?>
-                                <div class="col-md-3 mb-3">
-                                    <div class="card shadow-sm">
+                                <div class="col-lg-4 col-md-6 col-sm-12 col-xl-3 justify-content-center mb-4">
+                                    <div class="card border shadow-sm" style="width: 100%; max-width: 20rem; height: 100%;">
                                         <img src="../uploads/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top" alt="Recipe Image" width="50" height="230">
-                                        <div class="card-body">
+                                        <div class="d-flex flex-column card-body justify-content-between p-3 text-start" style=" flex-grow: 1;">
                                             <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
                                             <p class="card-text"><?php echo htmlspecialchars(substr($recipe['description'], 0, 80)) . '...'; ?></p>
                                             <div class="d-flex justify-content-between">
