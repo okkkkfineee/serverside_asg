@@ -74,6 +74,82 @@ class User {
         return true;
     }
 
+    // Check if user is Superadmin
+    public function isSuperadmin() {
+        return isset($_SESSION['roles']) && $_SESSION['roles'] === 'Superadmin';
+    }
+
+    // Check if user is Admin
+    public function isAdmin() {
+        return isset($_SESSION['roles']) && $_SESSION['roles'] === 'Admin';
+    }
+
+    // Check if user is Mod
+    public function isMod() {
+        return isset($_SESSION['roles']) && $_SESSION['roles'] === 'Mod';
+    }
+
+    //================ Admin Panel ================
+
+    // Get user list with pagination
+    public function getUserListPagination($filters, $offset, $limit) {
+        $query = "SELECT * FROM user WHERE 1=1";
+        $totalCountQuery = "SELECT COUNT(*) AS total FROM user WHERE 1=1";
+        $params = [];
+        $types = ''; 
+        
+        // Apply filters
+        if (!empty($filters['search'])) {
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $types .= 'ss';
+            $query .= " AND (user_id LIKE ? OR username LIKE ?)";
+            $totalCountQuery .= " AND (user_id LIKE ? OR username LIKE ?)";
+        }
+        
+        $typeFilters = [];
+        foreach (['isSuperadmin' => 'Superadmin', 'isAdmin' => 'Admin', 'isMod' => 'Mod', 'isUser' => 'User'] as $key => $value) {
+            if (!empty($filters[$key])) {
+                $typeFilters[] = $value;
+            }
+        }
+        
+        if (!empty($typeFilters)) {
+            $query .= " AND roles IN (" . str_repeat('?,', count($typeFilters) - 1) . '?)';
+            $totalCountQuery .= " AND roles IN (" . str_repeat('?,', count($typeFilters) - 1) . '?)';
+            $params = array_merge($params, $typeFilters);
+            $types .= str_repeat('s', count($typeFilters));
+        }
+        
+        $stmtTotalCount = $this->conn->prepare($totalCountQuery);
+        if ($stmtTotalCount === false) {
+            die('Prepare failed: ' . $this->conn->error);
+        }
+        if (!empty($params)) {
+            $stmtTotalCount->bind_param($types, ...$params);
+        }
+        $stmtTotalCount->execute();
+        $totalResult = $stmtTotalCount->get_result();
+        $totalRecords = $totalResult->fetch_assoc()['total'];
+        
+        $query .= " LIMIT ?, ?";
+        $params[] = $offset;
+        $params[] = $limit;
+        $types .= 'ii';
+        
+        $stmt = $this->conn->prepare($query);
+        if ($stmt === false) {
+            die('Prepare failed: ' . $this->conn->error);
+        }
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_all(MYSQLI_ASSOC);
+    
+        return ['data' => $data, 'total' => $totalRecords];
+    }
+
     //================ Profile ================
 
     // Get user info by ID

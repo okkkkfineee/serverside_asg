@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $confirmPassword = mysqli_real_escape_string($conn, $_POST['confirmPassword']);
         
         // Default Values
-        $roles = "user";
+        $roles = "User";
         $bio = "No bio yet.";
         $createdTime = date('Y-m-d H:i:s');
         $result = $userController->register($username, $email, $password, $confirmPassword, $roles, $bio, $createdTime);

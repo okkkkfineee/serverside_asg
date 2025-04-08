@@ -5,7 +5,7 @@
             <li class="nav-item"><a class="nav-link" href="#">&nbsp;|</a></li>
             <li class="nav-item"><a class="nav-link" href="homepage">Homepage</a></li>
             <li class="nav-item"><a class="nav-link" href="recipe_list?page=1">Recipes</a></li>
-            <li class="nav-item"><a class="nav-link" href="competitions">Events</a></li>
+            <li class="nav-item"><a class="nav-link" href="competitions_list">Competitions</a></li>
             <li class="nav-item"><a class="nav-link" href="meal_planner">Meal Planner</a></li>
             <li class="nav-item"><a class="nav-link" href="forums">Forums</a></li>
         </ul>
@@ -17,6 +17,9 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                         <li><a class="dropdown-item" href="profile">Profile</a></li>
+                        <?php if ($_SESSION['roles'] == "Superadmin" || $_SESSION['roles'] == "Admin" || $_SESSION['roles'] == "Mod"): ?>
+                            <li><a class="dropdown-item" href="admin_panel">Admin Panel</a></li>
+                        <?php endif; ?>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="logout">Logout</a></li>
                     </ul>

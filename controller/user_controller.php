@@ -35,6 +35,28 @@ class UserController {
         return $this->userModel->logout();
     }
 
+    // Check if user is Superadmin
+    public function isSuperadmin() {
+        return $this->userModel->isSuperadmin();
+    }
+
+    // Check if user is Admin
+    public function isAdmin() {
+        return $this->userModel->isAdmin();
+    }
+
+    // Check if user is Mod
+    public function isMod() {
+        return $this->userModel->isMod();
+    }
+
+    //================ Admin Panel ================
+
+    // Getting all user info
+    public function getUserListPagination($filters, $offset, $limit) {
+        return $this->userModel->getUserListPagination($filters, $offset, $limit);
+    }
+
     //================ Profile ================
 
     // Getting user info by ID

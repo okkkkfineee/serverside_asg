@@ -32,7 +32,6 @@ Users can sign in using their credentials.
 - /controllers           # Logic for handling requests and business logic  
 - /excel                 # Store excel file for testing  
 - /includes              # Shared UI components, e.g. header, footer  
-- /logs                  # Store any logs file, e.g. error logs  
 - /models                # Database models and entity classes  
 - /sql                   # SQL file  
 - /src                   # Store env  
