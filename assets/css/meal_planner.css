@@ -1,0 +1,53 @@
+body {
+    background-color: #f8f9fa;
+    padding-top: 20px;  /* Adds space at the top of the page */
+}
+
+.container {
+    margin-top: 20px;
+    padding-top: 15px;  /* Adds space inside the container */
+}
+
+#calendar {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar */
+.sidebar {
+    background: #343a40;
+    color: white;
+    padding: 20px; /* More padding for spacing */
+    border-radius: 8px;
+    padding-top: 30px; /* Adds space inside the sidebar */
+}
+
+.sidebar h4 {
+    text-align: center;
+    border-bottom: 2px solid #fff;
+    padding-bottom: 10px;
+    padding-top: 10px;  /* Adds space above the title */
+}
+
+.meal-category {
+    padding: 12px;
+    margin: 8px 0;
+    background: #495057;
+    text-align: center;
+    border-radius: 5px;
+    cursor: pointer;
+    padding-top: 10px;  /* Adds space inside the category boxes */
+}
+
+.meal-category:hover {
+    background: #6c757d;
+}
+
+/* Modal Styling */
+.modal-header {
+    background-color: #007bff;
+    color: white;
+    padding-top: 10px; /* Adds space above the modal title */
+}
