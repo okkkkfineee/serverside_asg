@@ -75,7 +75,7 @@ if (!$recipe) {
                 </div>
                 <?php if (!empty($recipe['images'])): ?>
                     <div class="ms-3">
-                        <img src="../uploads/<?php echo htmlspecialchars($recipe['images']); ?>" 
+                        <img src="../uploads/recipe/<?php echo htmlspecialchars($recipe['images']); ?>" 
                              alt="<?php echo htmlspecialchars($recipe['title']); ?>" 
                              class="rounded shadow-sm img-fluid" style="width: 200px; height: auto; object-fit: cover;">
                     </div>
