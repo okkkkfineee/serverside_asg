@@ -9,19 +9,19 @@ body {
 }
 
 #calendar {
-    background: #fff;
-    border-radius: 8px;
+    background-color: white;
     padding: 20px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Sidebar */
 .sidebar {
-    background: #343a40;
-    color: white;
-    padding: 20px; /* More padding for spacing */
+    background-color: #f8f9fa;
+    padding: 20px;
     border-radius: 8px;
-    padding-top: 30px; /* Adds space inside the sidebar */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: 100%;
 }
 
 .sidebar h4 {
@@ -32,22 +32,45 @@ body {
 }
 
 .meal-category {
-    padding: 12px;
-    margin: 8px 0;
-    background: #495057;
-    text-align: center;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    background-color: #e9ecef;
     border-radius: 5px;
     cursor: pointer;
-    padding-top: 10px;  /* Adds space inside the category boxes */
+    transition: background-color 0.3s;
 }
 
 .meal-category:hover {
-    background: #6c757d;
+    background-color: #dee2e6;
 }
 
-/* Modal Styling */
+/* Meal Plans List */
+.meal-plans-list {
+    margin-top: 15px;
+}
+
+.meal-plan-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    border-left: 4px solid #0d6efd;
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 8px;
+}
+
 .modal-header {
-    background-color: #007bff;
-    color: white;
-    padding-top: 10px; /* Adds space above the modal title */
+    background-color: #f8f9fa;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        margin-bottom: 20px;
+    }
 }
