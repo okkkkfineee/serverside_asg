@@ -218,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="row">
                         <?php if (empty($recipes)) : ?>
                             <div class="text-center mt-5">
-                                <p>No recipes yet.</p>
+                                <p class="lead">No recipes yet.</p>
                             </div>
                         <?php else : ?>
                             <?php foreach ($recipes as $recipe) : ?>
@@ -254,16 +254,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="row">
                         <?php if (empty($comps)) : ?>
                             <div class="text-center mt-5">
-                                <p>No Competitions yet.</p>
+                                <p class="lead">No Competitions yet.</p>
                             </div>
                         <?php else : ?>
                             <?php foreach ($comps as $comp) : ?>
                                 <div class="col-lg-4 col-md-6 col-sm-12 col-xl-3 justify-content-center mb-4">
                                     <div class="card border shadow-sm" style="width: 100%; max-width: 20rem; height: 100%;">
-                                        <img src="../uploads/comp/<?php echo $comp['comp_images'] ?? 'default_comp.png'; ?>" class="card-img-top" alt="Competition Image" width="50" height="230">
+                                        <img src="<?php echo isset($comp['comp_image']) ? "../uploads/comp/" . $comp['comp_image'] : '../assets/images/default_comp.png'; ?>" class="card-img-top" alt="Competition Image" width="50" height="230">
                                         <div class="d-flex flex-column card-body justify-content-between p-3 text-start" style=" flex-grow: 1;">
                                             <h5 class="card-title"><?php echo htmlspecialchars($comp['comp_title']); ?></h5>
-                                            <p class="card-text"><?php echo htmlspecialchars(substr($comp['comp_desc'], 0, 80)) . '...'; ?></p>
+                                            <p class="card-text"><?php echo htmlspecialchars(substr(str_replace(['\\r\\n', '\\n', '\\r'], "\n", $comp['comp_prize']), 0, 80)) . '...'; ?></p>
                                             <div class="d-flex justify-content-between">
                                                 <a href="manage_comp?type=edit&comp_id=<?php echo $comp['comp_id']; ?>" class="btn btn-warning">Edit</a>
                                                 <a href="manage_comp?type=delete&comp_id=<?php echo $comp['comp_id']; ?>" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this competition?');">Delete</a>

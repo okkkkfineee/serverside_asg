@@ -34,25 +34,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $start_date = mysqli_real_escape_string($conn, $_POST['start_date']);
     $end_date = mysqli_real_escape_string($conn, $_POST['end_date']);
 
-    $existingComp = $compController->getComp($comp_id);
-    $old_image = $existingComp ? $existingComp['comp_images'] : null;
-
-    if (!empty($_FILES["image"]["name"])) {
-        $comp_image = $comp_id . '_' . basename($_FILES["image"]["name"]);
-    } else {
-        $comp_image = $old_image;
-    }
-
     if (isset($_POST['action']) && $_POST['action'] === 'Host') {
-        
+        if (!empty($_FILES["image"]["name"])) {
+            $unique_id = uniqid();
+            $comp_image = $unique_id . '_' . basename($_FILES["image"]["name"]);
+        }
         $result = $compController->manageComp("host", "", $comp_title, $comp_image, $comp_desc, $comp_prize, $comp_theme, $start_date, $end_date);
         if ($result === true) {
             echo "<script>alert('Competition hosted successfully!');
             window.location.href = 'admin_panel';</script>";
         } else {
             $error = $result;
+            echo "<script>alert('$error');
+            window.location.href = 'manage_comp?host';</script>";
         }
     } elseif (isset($_POST['action']) && $_POST['action'] === 'Edit') {
+        $existingComp = $compController->getComp($comp_id);
+        $old_image = $existingComp ? $existingComp['comp_image'] : null;
+    
+        if (!empty($_FILES["image"]["name"])) {
+            $comp_image = $comp_id . '_' . basename($_FILES["image"]["name"]);
+        } else {
+            $comp_image = $old_image;
+        }
         $result = $compController->manageComp("update", $comp_id, $comp_title, $comp_image, $comp_desc, $comp_prize, $comp_theme, $start_date, $end_date);
         if ($result === true) {
             echo "<script>alert('Competition updated successfully!');
@@ -125,11 +129,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="row mb-5">
                     <div class="col-md-6">
                         <label class="form-label">Start Date</label>
-                        <input type="date" name="start_date" class="form-control" required>
+                        <input type="date" id="start_date" name="start_date" class="form-control" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">End Date</label>
-                        <input type="date" name="end_time" class="form-control" required>
+                        <input type="date" id="end_date" name="end_date" class="form-control" required>
                     </div>
                 </div>
                 <div class="d-flex justify-content-center">
@@ -155,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="mb-3">
                     <label class="form-label">Competition Description (Max 100 words)</label>
-                    <textarea name="comp_desc" class="form-control" rows="5" maxlength="600" oninput="limitWords(this, 100)" required><?= htmlspecialchars($comp_info['description']) ?></textarea>
+                    <textarea name="comp_desc" class="form-control" rows="5" maxlength="600" oninput="limitWords(this, 100)" required><?= htmlspecialchars(str_replace(['\\r\\n', '\\n', '\\r'], "\n", $comp_info['comp_desc'])) ?></textarea>
                 </div>
 
                 <div class="row mb-3">
@@ -168,9 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label class="form-label">Theme Category</label>
                             <select id="themeCategory" name="theme_category" class="form-select" required>
                                 <option value="">-- Choose a Theme --</option>
-                                <option value="cuisine" <?= $themeCategory === 'cuisine' ? 'selected' : '' ?>>Cuisine</option>
-                                <option value="cooking_time" <?= $themeCategory === 'cooking_time' ? 'selected' : '' ?>>Cooking Time</option>
-                                <option value="difficulty" <?= $themeCategory === 'difficulty' ? 'selected' : '' ?>>Difficulty</option>
+                                <option value="cuisine">Cuisine</option>
+                                <option value="cooking_time">Cooking Time</option>
+                                <option value="difficulty">Difficulty</option>
 
                             </select>
                         </div>
@@ -187,17 +191,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="row mb-5">
                     <div class="col-md-6">
                         <label class="form-label">Start Date</label>
-                        <input type="date" name="start_date" class="form-control" required value="<?= htmlspecialchars($comp_info['start_date']) ?>">
+                        <input type="date" id="start_date" name="start_date" class="form-control" required value="<?= htmlspecialchars($comp_info['start_date']) ?>">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">End Date</label>
-                        <input type="date" name="end_time" class="form-control" required value="<?= htmlspecialchars($comp_info['end_date']) ?>">
+                        <input type="date" id="end_date" name="end_date" class="form-control" required value="<?= htmlspecialchars($comp_info['end_date']) ?>">
                     </div>
                 </div>
                 
                 <div class="button-container">
                     <button type="submit" name="action" value="Edit" class="btn btn-primary">Update Changes</button>
-                    <a href="admin_panel" class="btn btn-secondary">Discard Changes</a>
+                    <a href="admin_panel?page=1" class="btn btn-secondary">Discard Changes</a>
                 </div>
             </form>
         <?php endif; ?>
@@ -212,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         const themeData = {
-            cuisine: ['Chinese', 'Indian', 'Japanese', 'Malay', 'Thai', 'Western', 'Any'],
+            cuisine: ['Any' ,'Chinese', 'Indian', 'Japanese', 'Malay', 'Thai', 'Western'],
             cooking_time: ['Under 15 Minutes', 'Under 30 Minutes', 'Under 1 Hour', 'Slow Cooked'],
             difficulty: ['Beginner-Friendly', 'Easy', 'Moderate', 'Challenging', 'Expert-Level']
         };
@@ -228,18 +232,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             themes.forEach(function (theme) {
                 const option = document.createElement('option');
-                option.value = theme.toLowerCase().replace(/\s+/g, '_');
+                option.value = theme;
                 option.textContent = theme;
                 compTheme.appendChild(option);
             });
         });
 
         document.addEventListener("DOMContentLoaded", function () {
-            const compTheme = "<?= htmlspecialchars($comp_info['comp_theme']) ?>";
-            const themeCategory = themeData[compTheme];
+            const compTheme = document.querySelector('#compTheme').value;
+            let themeCategory;
+
+            Object.keys(themeData).some(key => {
+                if (themeData[key].includes(compTheme)) {
+                    themeCategory = key;
+                    return true;
+                }
+            });
 
             if (themeCategory) {
                 document.getElementById('themeCategory').value = themeCategory;
+            }
+        });
+
+        document.querySelector('form').addEventListener('submit', function (e) {
+            const startDate = new Date(document.getElementById('start_date').value);
+            const endDate = new Date(document.getElementById('end_date').value);
+
+            if (startDate > endDate) {
+                alert('Start date cannot be later than end date.');
+                e.preventDefault();
+            } else if (startDate.toDateString() === endDate.toDateString()) {
+                alert('Start date and end date cannot be the same.');
+                e.preventDefault();
+            } else if ((endDate - startDate) / (1000 * 60 * 60 * 24) < 10) {
+                alert('The duration between start date and end date cannot be lesser than 10 days.');
+                e.preventDefault();
             }
         });
     </script>

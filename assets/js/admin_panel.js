@@ -76,7 +76,7 @@ function showTable(data) {
                 <td>${row.email || '-'}</td>
                 <td>${row.roles || '-'}</td>
                 <td style="padding: 0">
-                    <a href="manage_user?ID=${row.user_id}"><i class="bi bi-arrow-right-circle"></i></a>
+                    <a href="manage_user?user_id=${row.user_id}"><i class="bi bi-arrow-right-circle"></i></a>
                 </td>
             `;  
    
