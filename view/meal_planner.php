@@ -13,6 +13,17 @@ $allRecipes = $recipeController->getAllRecipes();
 // Get user's meal plans
 $userMealPlans = $mealPlanningController->getUserMealPlans($_SESSION['user_id']);
 
+// Get selected category filter
+$selectedCategory = isset($_GET['category']) ? $_GET['category'] : 'All';
+
+// Filter meal plans by category if a specific category is selected
+$filteredMealPlans = null;
+if ($selectedCategory !== 'All') {
+    $filteredMealPlans = $mealPlanningController->getMealPlansByCategory($_SESSION['user_id'], $selectedCategory);
+} else {
+    $filteredMealPlans = $userMealPlans;
+}
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -49,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Stylesheets -->
     <link rel="stylesheet" href="../assets/css/header.css">
     <link rel="stylesheet" href="../assets/css/styles.css">
-    <link rel="stylesheet" href="../assets/css/meal_planner.css">  <!-- External meal planner styles -->
+    <link rel="stylesheet" href="../assets/css/meal_planner.css?v=<?php echo time(); ?>">  <!-- Force reload CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- FullCalendar -->
@@ -60,8 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Prepare events data from PHP
             var events = [];
-            <?php if ($userMealPlans && $userMealPlans->num_rows > 0): ?>
-                <?php while ($plan = $userMealPlans->fetch_assoc()): ?>
+            <?php if ($filteredMealPlans && $filteredMealPlans->num_rows > 0): ?>
+                <?php while ($plan = $filteredMealPlans->fetch_assoc()): ?>
                     events.push({
                         id: '<?php echo $plan['plan_id']; ?>',
                         title: '<?php echo htmlspecialchars($plan['plan_name']); ?>',
@@ -128,33 +139,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Sidebar -->
             <div class="col-md-3 sidebar">
                 <h4>Meal Categories</h4>
-                <div class="meal-category">Breakfast</div>
-                <div class="meal-category">Lunch</div>
-                <div class="meal-category">Dinner</div>
-                <div class="meal-category">Snacks</div>
+                <nav class="meal-categories">
+                    <a href="meal_planner.php?category=All" class="meal-category <?php echo $selectedCategory === 'All' ? 'active' : ''; ?>">All</a>
+                    <a href="meal_planner.php?category=Breakfast" class="meal-category <?php echo $selectedCategory === 'Breakfast' ? 'active' : ''; ?>">Breakfast</a>
+                    <a href="meal_planner.php?category=Lunch" class="meal-category <?php echo $selectedCategory === 'Lunch' ? 'active' : ''; ?>">Lunch</a>
+                    <a href="meal_planner.php?category=Dinner" class="meal-category <?php echo $selectedCategory === 'Dinner' ? 'active' : ''; ?>">Dinner</a>
+                    <a href="meal_planner.php?category=Snacks" class="meal-category <?php echo $selectedCategory === 'Snacks' ? 'active' : ''; ?>">Snacks</a>
+                </nav>
                 
                 <h4 class="mt-4">Your Meal Plans</h4>
                 <div class="meal-plans-list">
                     <?php 
                     // Reset the pointer to the beginning of the result set
-                    if ($userMealPlans) {
-                        $userMealPlans->data_seek(0);
+                    if ($filteredMealPlans) {
+                        $filteredMealPlans->data_seek(0);
                         
-                        if ($userMealPlans->num_rows > 0): 
-                            while ($plan = $userMealPlans->fetch_assoc()): 
+                        if ($filteredMealPlans->num_rows > 0): 
+                            while ($plan = $filteredMealPlans->fetch_assoc()): 
                     ?>
                         <div class="meal-plan-item">
                             <a href="view_meal_plan.php?plan_id=<?php echo $plan['plan_id']; ?>" class="text-decoration-none text-dark">
                                 <strong><?php echo htmlspecialchars($plan['plan_name']); ?></strong><br>
                                 <small>Category: <?php echo htmlspecialchars($plan['meal_category']); ?><br>
-                                Time: <?php echo $plan['meal_time']; ?>:00</small>
+                                Time: <?php 
+                                    $hour = (int)$plan['meal_time'];
+                                    $period = $hour >= 12 ? 'PM' : 'AM';
+                                    $displayHour = $hour % 12;
+                                    $displayHour = $displayHour == 0 ? 12 : $displayHour;
+                                    echo $displayHour . ':00 ' . $period;
+                                ?><br>
+                                Date: <?php echo date('F j, Y', strtotime($plan['meal_date'])); ?></small>
                             </a>
                         </div>
                     <?php 
                             endwhile; 
                         else: 
                     ?>
-                        <p>No meal plans yet. Create a new meal plan to get started.</p>
+                        <p>No meal plans found for this category.</p>
                     <?php 
                         endif; 
                     } else {
@@ -199,7 +220,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <select class="form-select" id="meal_time" name="meal_time" required>
                                     <option value="">-- Select Hour --</option>
                                     <?php for($i = 0; $i < 24; $i++): ?>
-                                        <option value="<?php echo $i; ?>"><?php echo $i; ?>:00</option>
+                                        <option value="<?php echo $i; ?>">
+                                            <?php 
+                                                $period = $i >= 12 ? 'PM' : 'AM';
+                                                $displayHour = $i % 12;
+                                                $displayHour = $displayHour == 0 ? 12 : $displayHour;
+                                                echo $displayHour . ':00 ' . $period;
+                                            ?>
+                                        </option>
                                     <?php endfor; ?>
                                 </select>
                             </div>

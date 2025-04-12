@@ -26,22 +26,52 @@ body {
 
 .sidebar h4 {
     text-align: center;
-    border-bottom: 2px solid #fff;
+    border-bottom: 2px solid #e9ecef;
     padding-bottom: 10px;
-    padding-top: 10px;  /* Adds space above the title */
+    padding-top: 10px;
+    margin-bottom: 20px;
 }
 
-.meal-category {
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    background-color: #e9ecef;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+/* Meal Categories */
+.sidebar .meal-categories {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 15px !important;
+    margin-bottom: 20px !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 0 !important;
 }
 
-.meal-category:hover {
-    background-color: #dee2e6;
+.sidebar .meal-categories .meal-category {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 80% !important;
+    padding: 12px 20px !important;
+    border: 2px solid #000 !important;
+    border-radius: 25px !important;
+    background-color: white !important;
+    color: #000 !important;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin: 0 !important;
+}
+
+.sidebar .meal-categories .meal-category:hover {
+    background-color: #f8f9fa !important;
+    color: #000 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.sidebar .meal-categories .meal-category.active {
+    background-color: #000 !important;
+    color: white !important;
+    border-color: #000 !important;
 }
 
 /* Meal Plans List */
