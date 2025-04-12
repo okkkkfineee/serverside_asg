@@ -99,7 +99,7 @@ $comps = $compController->getUserComp($_SESSION['user_id']);
                             <?php foreach ($recipes as $recipe) : ?>
                                 <div class="col-lg-4 col-md-6 col-sm-12 col-xl-3 justify-content-center mb-4">
                                     <div class="card border shadow-sm" style="width: 100%; max-width: 20rem; height: 100%;">
-                                        <img src="../uploads/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top" alt="Recipe Image" width="50" height="230">
+                                        <img src="../uploads/recipes/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top" alt="Recipe Image" width="50" height="230">
                                         <div class="d-flex flex-column card-body justify-content-between p-3 text-start" >
                                             <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
                                             <p class="card-text"><?php echo htmlspecialchars(substr($recipe['description'], 0, 80)) . '...'; ?></p>
@@ -132,7 +132,7 @@ $comps = $compController->getUserComp($_SESSION['user_id']);
                             <?php foreach ($comps as $comp) : ?>
                                 <div class="col-lg-4 col-md-6 col-sm-12 col-xl-3 justify-content-center mb-4">
                                     <div class="card border shadow-sm" style="width: 100%; max-width: 20rem; height: 100%;">
-                                        <img src="../uploads/comp/<?php echo $comp['comp_images'] ?? 'default_comp.png'; ?>" class="card-img-top" alt="Competition Image" width="50" height="230">
+                                        <img src="<?= (!empty($comp['comp_image']) ? '../uploads/comp/' . $comp['comp_image'] : '../assets/images/default_comp.png'); ?>" class="card-img-top" alt="Competition Image" width="50" height="230">
                                         <div class="d-flex flex-column card-body justify-content-between p-3 text-start" style=" flex-grow: 1;">
                                             <h5 class="card-title"><?php echo htmlspecialchars($comp['comp_title']); ?></h5>
                                             <p class="card-text"><?php echo htmlspecialchars(substr($comp['comp_desc'], 0, 80)) . '...'; ?></p>
@@ -167,7 +167,7 @@ $comps = $compController->getUserComp($_SESSION['user_id']);
                             <?php foreach ($recipes as $recipe) : ?>
                                 <div class="col-lg-4 col-md-6 col-sm-12 col-xl-3 justify-content-center mb-4">
                                     <div class="card border shadow-sm" style="width: 100%; max-width: 20rem; height: 100%;">
-                                        <img src="../uploads/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top" alt="Recipe Image" width="50" height="230">
+                                        <img src="<?= (!empty($recipe['images']) ? '../uploads/recipes/' . $recipe['images'] : '../assets/images/default_recipe.png'); ?>" class="card-img-top" alt="Recipe Image" width="50" height="230">
                                         <div class="d-flex flex-column card-body justify-content-between p-3 text-start" style=" flex-grow: 1;">
                                             <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
                                             <p class="card-text"><?php echo htmlspecialchars(substr($recipe['description'], 0, 80)) . '...'; ?></p>
@@ -187,7 +187,7 @@ $comps = $compController->getUserComp($_SESSION['user_id']);
             <!-- Change Password Section -->
             <div id="changePassword" class="content-section">
                 <h3>Change Password</h3>
-                <form method="POST" action="change_password.php">
+                <form method="POST" action="change_password">
                     <div class="mb-3">
                         <input type="password" class="form-control" name="old_password" placeholder="Current Password" required>
                     </div>
@@ -197,7 +197,7 @@ $comps = $compController->getUserComp($_SESSION['user_id']);
                     <div class="mb-3">
                         <input type="password" class="form-control" name="confirm_password" placeholder="Confirm New Password" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Update Password</button>
+                    <button type="submit" class="btn btn-primary" value="change" name="action">Update Password</button>
                 </form>
             </div>
         </div>

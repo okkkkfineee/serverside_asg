@@ -11,7 +11,26 @@ $compController = new CompetitionController($conn);
 
 $comp = $compController->getComp($_GET['comp_id']);
 $allEntries = $compController->getAllEntries($_GET['comp_id']);
+$checkEntry = $compController->checkEntry($_GET['comp_id'], $_SESSION['user_id']);
 
+usort($allEntries, function ($a, $b) {
+    return $b['vote_count'] - $a['vote_count'];
+});
+$top_entries = array_slice($allEntries, 0, 5);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $entry_id = $_POST['entry_id'];
+    $result = $compController->voteRecipe($entry_id, $_SESSION['user_id']);
+    if ($result === true) {
+        echo "<script>alert('You have successfully voted for this recipe.');
+        window.history.back();</script>";
+        exit();
+    } else {
+        echo "<script>alert('$result');
+        window.history.back();</script>";
+        exit();
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -45,11 +64,11 @@ $allEntries = $compController->getAllEntries($_GET['comp_id']);
     <?php include '../includes/header.php'; ?>
 
     <div id="comp-image-section">
-        <img src="../uploads/comp/<?php echo $comp['comp_image'] ?? 'default_comp.png'; ?>" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Competition Image">
+        <img src="<?= (!empty($comp['comp_image']) ? '../uploads/comp/' . $comp['comp_image'] : '../assets/images/default_comp.png'); ?>" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Competition Image">
     </div>
 
     
-    <div class="container mb-5">
+    <div class="container mb-5 mt-3">
         <div class="row">
             <div class="col-12 text-center">
                 <h1><?php echo $comp['comp_title']; ?></h1>
@@ -60,8 +79,14 @@ $allEntries = $compController->getAllEntries($_GET['comp_id']);
             <div class="col-12 text-center">
                 <a href="#info" class="btn btn-secondary me-2" style="width: 200px;" id="info-btn">Competition Info</a>
                 <a href="#entries" class="btn btn-secondary me-2" style="width: 200px;" id="entries-btn">All Entries</a>
-                <?php if (strtotime($comp['end_date']) > time()) : ?>
-                    <a href="competition_entry?comp_id=<?php echo $_GET['comp_id']; ?>" class="btn btn-success" style="width: 200px;" id="entries-btn">Join Competition</a>
+                <?php if (strtotime(date('Y-m-d')) >= strtotime($comp['end_date'] . ' + 11 days')) : ?>
+                    <a href="#announcement" class="btn btn-primary" style="width: 200px;" id="announcement-btn">Winner Announcement</a>
+                <?php elseif (strtotime($comp['end_date']) > time()) : ?>
+                    <?php if ($checkEntry) : ?>
+                        <a href="#" class="btn btn-success disabled" style="width: 200px;" id="entries-btn" aria-disabled="true">Joined</a>
+                    <?php else : ?>
+                        <a href="competition_entry?comp_id=<?php echo $_GET['comp_id']; ?>" class="btn btn-success" style="width: 200px;" id="entries-btn">Join Competition</a>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>
@@ -71,25 +96,34 @@ $allEntries = $compController->getAllEntries($_GET['comp_id']);
     <div class="content-section" id="entries">
         <div class="container">
             <div class="row row-cols-4">
-            <?php if (empty($allEntries)) : ?>
-                <div class="col-12 text-center">
-                    <p class="lead">No entries yet.</p>
-                </div>
-            <?php else : ?>
-                <?php foreach ($allEntries as $i => $entry) : ?>
-                <div class="col">
-                    <div class="card border shadow-sm" style="width: 100%;">
-                        <img src="../uploads/<?php echo $entry['images'] ?? 'default_comp.png'; ?>" class="card-img-top" alt="Competition Image" style="height: 200px; object-fit: cover;">
-                        <div class="d-flex flex-column card-body justify-content-between p-3 text-start">
-                            <h5 class="card-title"><?php echo htmlspecialchars($entry['title']); ?></h5>
-                            <p class="card-text"><?php echo htmlspecialchars(substr($entry['description'], 0, 50)) . '...'; ?></p>
-                            <!-- vote -->
-                            <a href="view_comp?comp_id=<?php echo $entry['comp_id'] . "#entries"; ?>" class="btn btn-secondary mt-2" style="color: white;">View Competition</a>
-                        </div>
+                <?php if (empty($allEntries)) : ?>
+                    <div class="col-12 text-center">
+                        <p class="lead">No entries yet.</p>
                     </div>
-                </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
+                <?php else : ?>
+                    <?php foreach ($allEntries as $i => $entry) : ?>
+                        <div class="col">
+                            <form action="view_comp?comp_id=<?php echo $_GET['comp_id'] ?>#entries" method="post" onsubmit="return confirmVote();">
+                                <input type="hidden" name="entry_id" value="<?= htmlspecialchars($entry['entry_id']) ?>">
+
+                                <div class="card border shadow-sm" style="width: 100%;">
+                                    <img src="<?= (!empty($entry['images']) ? '../uploads/recipes/' . $entry['images'] : '../assets/images/default_recipe.png'); ?>" class="card-img-top" alt="Recipe Image" style="height: 200px; object-fit: cover;">
+                                    <div class="d-flex flex-column card-body justify-content-between p-3 text-start">
+                                        <h5 class="card-title"><?= htmlspecialchars($entry['title']) ?></h5>
+                                        <p class="card-text"><?= htmlspecialchars(substr($entry['description'], 0, 50)) . '...'; ?></p>
+                                        <p class="card-text text-end"><b><?= htmlspecialchars($entry['vote_count']) ?></b> Votes</p>
+                                        <?php if (strtotime($comp['end_date'] . ' + 11 days') > time()) : ?>
+                                            <button type="submit" class="btn btn-success mt-2">Vote</button>
+                                        <?php else : ?>
+                                            <button type="submit" class="btn btn-secondary mt-2 disabled" disabled>Voting Closed</button>
+                                        <?php endif; ?>
+                                        <a href="view_recipe?recipe_id=<?= $entry['recipe_id'] ?>" class="btn btn-secondary mt-2 text-white">View Recipe</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -108,7 +142,24 @@ $allEntries = $compController->getAllEntries($_GET['comp_id']);
                             </div>
                             <div class="col info-box">
                                 <h5 class="text-center text-decoration-underline">Prizes</h5>
-                                <p class="text-center"><?php echo $comp['comp_prize']; ?></p>
+                                <?php foreach ($comp['prizes'] as $index => $prize) : ?>
+                                    <p class="text-center">
+                                        <?php
+                                            $number = $index + 1;
+                                            if ($number == 1) {
+                                                $suffix = 'st';
+                                            } elseif ($number == 2) {
+                                                $suffix = 'nd';
+                                            } elseif ($number == 3) {
+                                                $suffix = 'rd';
+                                            } elseif ($number == 4) {
+                                                $suffix = 'th';
+                                                $number = '4-5';
+                                            }
+                                        ?>
+                                        <?= $number . $suffix ?> Prize: <?= htmlspecialchars($prize) ?>
+                                    </p>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                         <hr>
@@ -182,23 +233,82 @@ $allEntries = $compController->getAllEntries($_GET['comp_id']);
         </div>
     </div>
 
+    <!-- Winner Announcement -->
+    <div class="content-section" id="announcement" style="display: none;">
+        <div class="container">
+            <div class="row justify-content-center">
+                <?php for ($index = 0; $index < 3; $index++) : ?>
+                    <?php
+                        $entry = $top_entries[$index] ?? null;
+                        $background_color = ($index == 0) ? 'gold' : (($index == 1) ? '#C0C0C0' : '#CD7F32');
+                    ?>
+                    <div class="col-md-4">
+                        <div class="card border shadow-sm" style="width: 100%; background-color: <?= $background_color ?>;">
+                            <h5 class="card-header text-center">Top Entry #<?= $index; ?></h5>
+                            <img src="<?= (!empty($entry['images']) ? '../uploads/recipes/' . $entry['images'] : '../assets/images/default_recipe.png'); ?>" class="card-img-top" alt="Recipe Image" style="height: 150px; object-fit: cover;">
+                            <div class="card-body text-center">
+                                <h5 class="card-title"><?= htmlspecialchars($entry['title'] ?? 'No Entry'); ?></h5>
+                                <p class="card-text"><?= htmlspecialchars(substr($entry['description'] ?? 'No description available.', 0, 50)) . '...'; ?></p>
+                                <p class="text-muted">Votes: <?= $entry['vote_count'] ?? 0; ?></p>
+                            </div>
+                        </div>
+                    </div>
+                <?php endfor; ?>
+            </div>
+
+            <div class="row justify-content-center mt-4">
+                <?php for ($index = 0; $index < 2; $index++) : ?>
+                    <?php
+                        $entry = $top_entries[$index + 3] ?? null;
+                    ?>
+                    <div class="col-md-4">
+                        <div class="card border shadow-sm" style="width: 100%; background-color: darkgray;">
+                            <h5 class="card-header text-center">Top Entry #<?= $index + 4; ?></h5>
+                            <img src="<?= (!empty($entry['images']) ? '../uploads/recipes/' . $entry['images'] : '../assets/images/default_recipe.png'); ?>" class="card-img-top" alt="Recipe Image" style="height: 150px; object-fit: cover;">
+                            <div class="card-body text-center">
+                                <h5 class="card-title"><?= htmlspecialchars($entry['title'] ?? 'No Entry'); ?></h5>
+                                <p class="card-text"><?= htmlspecialchars(substr($entry['description'] ?? 'No description available.', 0, 50)) . '...'; ?></p>
+                                <p class="text-muted">Votes: <?= $entry['vote_count'] ?? 0; ?></p>
+                            </div>
+                        </div>
+                    </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const entriesBtn = document.getElementById('entries-btn');
             const infoBtn = document.getElementById('info-btn');
+            const announcementBtn = document.getElementById('announcement-btn');
             const entriesSection = document.getElementById('entries');
             const infoSection = document.getElementById('info');
+            const announcementSection = document.getElementById('announcement');
 
             entriesBtn.addEventListener('click', () => {
                 entriesSection.style.display = 'block';
                 infoSection.style.display = 'none';
+                announcementSection.style.display = 'none';
             });
 
             infoBtn.addEventListener('click', () => {
                 entriesSection.style.display = 'none';
                 infoSection.style.display = 'block';
+                announcementSection.style.display = 'none';
+            });
+
+            announcementBtn.addEventListener('click', () => {
+                entriesSection.style.display = 'none';
+                infoSection.style.display = 'none';
+                announcementSection.style.display = 'block';
             });
         });
+
+        function confirmVote() {
+            return confirm("Are you sure you want to vote for this recipe?");
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

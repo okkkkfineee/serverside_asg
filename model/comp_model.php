@@ -14,7 +14,21 @@ class Competition {
         $stmt->bind_param("i", $comp_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        return $result->fetch_assoc();
+        $comp = $result->fetch_assoc();
+        if (!$comp) {
+            die("Competition not found!");
+        }
+
+        $stmt_prizes = $this->conn->prepare("SELECT * FROM competition_prize WHERE comp_id = ? ORDER BY prize_num ASC");
+        $stmt_prizes->bind_param("i", $comp_id);
+        $stmt_prizes->execute();
+        $prizes_result = $stmt_prizes->get_result();
+        while ($row = $prizes_result->fetch_assoc()) {
+            $prize[] = $row['prize_desc'];
+        }
+
+        $comp['prizes'] = $prize;
+        return $comp;
     }
 
     // Get all competition info
@@ -46,15 +60,9 @@ class Competition {
             return $result;
         }
 
-        // Validate description (50 words max)
-        if (str_word_count($comp_prize) > 50) {
-            $result = "Description must not exceed 50 words.";
-            return $result;
-        }
-
         $target_dir = "../uploads/comp/";
         $allowedExtensions = ['jpg', 'jpeg', 'png'];
-        $maxFileSize = 10 * 1024 * 1024; // 10MB
+        $maxFileSize = 2 * 1024 * 1024; // 2MB
     
         if ($action === 'host') {
             // Handle Image Upload
@@ -78,10 +86,21 @@ class Competition {
                 }
             }
 
-            $stmt = $this->conn->prepare("INSERT INTO competition (comp_title, comp_image, comp_desc, comp_prize, comp_theme, start_date, end_date) 
-                                    VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssss", $comp_title, $comp_image, $comp_desc, $comp_prize, $comp_theme, $start_date, $end_date);
+            $stmt = $this->conn->prepare("INSERT INTO competition (comp_title, comp_image, comp_desc, comp_theme, start_date, end_date) 
+                                    VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssss", $comp_title, $comp_image, $comp_desc, $comp_theme, $start_date, $end_date);
             if ($stmt->execute()) {
+                $comp_id = $stmt->insert_id;
+                $prizes = array_values($comp_prize);
+                $stmt_prize = $this->conn->prepare("INSERT INTO competition_prize (comp_id, prize_num, prize_desc) VALUES (?, ?, ?)");
+                foreach ($prizes as $index => $prize_desc) {
+                    if (empty(trim($prize_desc))) {
+                        continue;
+                    }
+                    $prize_num = $index + 1;
+                    $stmt_prize->bind_param("iis", $comp_id, $prize_num, $prize_desc);
+                    $stmt_prize->execute();
+                }
                 return true;
             } else {
                 $result = "Error hosting competition: " . $stmt->error;
@@ -123,10 +142,42 @@ class Competition {
             }
 
             $comp_desc = stripslashes($comp_desc);
-            $stmt = $this->conn->prepare("UPDATE competition SET comp_title = ?, comp_image = ?, comp_desc = ?, comp_prize = ?, comp_theme = ?, start_date = ?, end_date = ? WHERE comp_id = ?");
-            $stmt->bind_param("sssssssi", $comp_title, $comp_image, $comp_desc, $comp_prize, $comp_theme, $start_date, $end_date, $comp_id);
+            $stmt = $this->conn->prepare("UPDATE competition SET comp_title = ?, comp_image = ?, comp_desc = ?, comp_theme = ?, start_date = ?, end_date = ? WHERE comp_id = ?");
+            $stmt->bind_param("ssssssi", $comp_title, $comp_image, $comp_desc, $comp_theme, $start_date, $end_date, $comp_id);
         
             if ($stmt->execute()) {
+                $existing_prize = [];
+                $stmt_prize_select = $this->conn->prepare("SELECT prize_num FROM competition_prize WHERE comp_id = ?");
+                $stmt_prize_select->bind_param("i", $comp_id);
+                $stmt_prize_select->execute();
+                $result = $stmt_prize_select->get_result();
+                while ($row = $result->fetch_assoc()) {
+                    $existing_prize[$row['prize_num']] = true;
+                }
+            
+                $prizes = array_values($comp_prize);
+                $stmt_update = $this->conn->prepare("UPDATE competition_prize SET prize_desc = ? WHERE comp_id = ? AND prize_num = ?");
+                $stmt_insert = $this->conn->prepare("INSERT INTO competition_prize (comp_id, prize_num, prize_desc) VALUES (?, ?, ?)");
+            
+                foreach ($prizes as $index => $prize_desc) {
+                    if (empty(trim($prize_desc))) continue;
+            
+                    $prize_num = $index + 1;
+            
+                    if (isset($existing_prize[$prize_num])) {
+                        $stmt_update->bind_param("sii", $prize_desc, $comp_id, $prize_num);
+                        $stmt_update->execute();
+                    } else {
+                        $stmt_insert->bind_param("iis", $comp_id, $prize_num, $prize_desc);
+                        $stmt_insert->execute();
+                    }
+                }
+            
+                $prizes_count = count($prizes);
+                $stmt_delete = $this->conn->prepare("DELETE FROM competition_prize WHERE comp_id = ? AND prize_num > ?");
+                $stmt_delete->bind_param("ii", $comp_id, $prizes_count);
+                $stmt_delete->execute();
+            
                 return true;
             } else {
                 return "Error updating recipe: " . $stmt->error;
@@ -159,15 +210,66 @@ class Competition {
     //================ Competition Entries ================
 
     public function getAllEntries($comp_id) {
-        $sql = "SELECT r.* FROM competition_entry ce
-                INNER JOIN recipe r ON ce.recipe_id = r.recipe_id
-                WHERE ce.comp_id = ?";
+        $sql = "SELECT r.*, ce.*, COUNT(cv.vote_id) AS vote_count
+                FROM competition_entry ce
+                JOIN recipe r ON ce.recipe_id = r.recipe_id
+                LEFT JOIN competition_vote cv ON ce.entry_id = cv.entry_id
+                WHERE ce.comp_id = ?
+                GROUP BY ce.entry_id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bind_param("i", $comp_id);
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
         return $result->fetch_all(MYSQLI_ASSOC);
+    }
+    
+
+    public function checkEntry($comp_id, $user_id) {
+        $sql = "SELECT * FROM competition_entry WHERE comp_id = ? AND user_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $comp_id, $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result->num_rows > 0;
+    }
+
+    public function submitEntry($comp_id, $user_id, $selected_recipe_id){
+        $sql = "INSERT INTO competition_entry (comp_id, user_id, recipe_id) VALUES (?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iii", $_GET['comp_id'], $_SESSION['user_id'], $selected_recipe_id);
+        $stmt->execute();
+        $stmt->close();
+        return true; 
+    }
+
+    //================ Competition Voting ================
+    public function voteRecipe($entry_id, $user_id){
+        $sql = "SELECT * FROM competition_entry WHERE entry_id = ? AND user_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $entry_id, $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        if ($result->num_rows > 0) {
+            return "You cannot vote for your own entry.";
+        }
+        $sql = "SELECT * FROM competition_vote WHERE entry_id = ? AND user_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $entry_id, $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        if ($result->num_rows > 0) {
+            return "You have already voted for this entry.";
+        }
+        $sql = "INSERT INTO competition_vote (entry_id, user_id) VALUES (?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $entry_id, $user_id);
+        $stmt->execute();
+        $stmt->close();
+        return true;
     }
 }
 ?>

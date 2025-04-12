@@ -1,7 +1,12 @@
 <?php
 
 session_start();
+require '../config/db_connection.php';
+require '../controller/recipe_controller.php';
 
+$recipeController = new RecipeController($conn);
+
+$recipes = $recipeController->getAllRecipes();
 ?>
 
 <!DOCTYPE html>
@@ -17,6 +22,58 @@ session_start();
 </head>
 <body>
     <?php include '../includes/header.php'; ?>
+
+    <div class="container mt-5">
+        <div class="text-center mb-4">
+            <h1>Welcome to Recipe.com!</h1>
+            <p class="lead">Discover, create, and share your favorite recipes.</p>
+        </div>
+
+        <div class="row text-center">
+            <div class="col-md-6 mb-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Browse Recipes</h5>
+                        <p class="card-text">Explore a wide variety of dishes from different cuisines and difficulty levels.</p>
+                        <a href="recipe_list" class="btn btn-primary">Explore</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Join Competitions</h5>
+                        <p class="card-text">Show off your cooking skills and compete with others in exciting competitions.</p>
+                        <a href="competition_list" class="btn btn-success">Join Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="mt-5">
+
+        <h3 class="text-center mt-5">Recent Recipes</h3>
+        <?php
+        if (!empty($recipes)) : ?>
+            <div class="row mt-4">
+                <?php foreach ($recipes as $recipe) : ?>
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow-sm">
+                            <img src="../uploads/recipes/<?= $recipe['images'] ?>" class="card-img-top" alt="<?= $recipe['title'] ?>">
+                            <div class="card-body">
+                                <h5 class="card-title"><?= $recipe['title'] ?></h5>
+                                <p class="card-text"><?= $recipe['description'] ?></p>
+                                <a href="view_recipe?recipe_id=<?= $recipe['recipe_id'] ?>" class="btn btn-primary">View</a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+    </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

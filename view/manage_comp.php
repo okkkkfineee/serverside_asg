@@ -23,13 +23,20 @@ if ($type === "delete" && isset($_GET['comp_id'])) {
         window.location.href = 'admin_panel';</script>";
     } else {
         $error = $result;
+        echo "<script>alert('$error');
+        window.location.href = 'admin_panel';</script>";
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $comp_title = mysqli_real_escape_string($conn, $_POST['comp_title']);
     $comp_desc = mysqli_real_escape_string($conn, $_POST['comp_desc']);
-    $comp_prize = mysqli_real_escape_string($conn, $_POST['comp_prize']);
+    $comp_prize = array(
+        'comp_prize_1' => mysqli_real_escape_string($conn, $_POST['comp_prize_1']),
+        'comp_prize_2' => mysqli_real_escape_string($conn, $_POST['comp_prize_2']),
+        'comp_prize_3' => mysqli_real_escape_string($conn, $_POST['comp_prize_3']),
+        'comp_prize_4' => isset($_POST['comp_prize_4']) ? mysqli_real_escape_string($conn, $_POST['comp_prize_4']) : ''
+    );
     $comp_theme = mysqli_real_escape_string($conn, $_POST['comp_theme']);
     $start_date = mysqli_real_escape_string($conn, $_POST['start_date']);
     $end_date = mysqli_real_escape_string($conn, $_POST['end_date']);
@@ -92,8 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input type="text" name="comp_title" class="form-control" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Upload Competition Image (JPG, JPEG, PNG only)</label>
-                        <input type="file" name="image" class="form-control" accept=".jpg,.jpeg,.png" required>
+                        <label class="form-label">Upload Competition Image (JPG, JPEG, PNG only), Max 2 MB</label>
+                        <input type="file" name="image" class="form-control" accept=".jpg,.jpeg,.png" data-max-size="2M" required>
                     </div>
                 </div>
 
@@ -105,7 +112,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Competition Prizes (Max 50 words)</label>
-                        <textarea name="comp_prize" class="form-control" rows="5" maxlength="300" oninput="limitWords(this, 50)" required></textarea>
+                        <div class="row">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">1st Prize</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" name="comp_prize_1" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">2nd Prize</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" name="comp_prize_2" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">3rd Prize</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" name="comp_prize_3" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">4-5th Prize (Optional)</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" name="comp_prize_4" class="form-control">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <div class="row mb-4">
@@ -151,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input type="text" name="comp_title" class="form-control" value="<?= htmlspecialchars($comp_info['comp_title']) ?>" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Upload New Image (JPG, JPEG, PNG only)</label>
+                        <label class="form-label">Upload New Image (JPG, JPEG, PNG only), Max 2 MB</label>
                         <input type="file" name="image" class="form-control" accept=".jpg,.jpeg,.png">
                         <p>Current Image File: <strong><?= htmlspecialchars($comp_info['comp_image']) ?></strong></p>
                     </div>
@@ -164,8 +204,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Competition Prizes (Max 50 words)</label>
-                        <textarea name="comp_prize" class="form-control" rows="5" maxlength="300" oninput="limitWords(this, 50)" required><?= htmlspecialchars($comp_info['comp_prize']) ?></textarea>
+                        <label class="form-label">Competition Prizes</label>
+                        <?php 
+                        $prizes = $comp_info['prizes'] ?? [];
+                        $labels = ['1st Prize', '2nd Prize', '3rd Prize', '4-5th Prize (Optional)']; // Define labels
+                        for ($i = 0; $i < 4; $i++):
+                            $value = isset($prizes[$i]) ? htmlspecialchars($prizes[$i]) : ''; 
+                        ?>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label"><?= $labels[$i] ?></label> <!-- Dynamic label based on $i -->
+                            </div>
+                            <div class="col-md-8">
+                                <input type="text" name="comp_prize_<?= $i + 1 ?>" class="form-control mb-2" value="<?= $value ?>" <?= $i < 3 ? 'required' : '' ?>>
+                            </div>
+                        </div>
+                        <?php endfor; ?>
                     </div>
                     <div class="col-md-6">
                         <div class="row mb-4">

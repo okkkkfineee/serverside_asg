@@ -1,5 +1,11 @@
 <?php
 
+require_once '../includes/phpmailer_load.php';
+require_once __DIR__ . '/../src/env_load.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 class User {
     private $conn;
 
@@ -72,6 +78,104 @@ class User {
         setcookie("username", "", time() - 3600, "/", "", false, true);
         setcookie("user_type", "", time() - 3600, "/", "", false, true);
         return true;
+    }
+
+    // Change/reset Password
+    function changePassword($action, $user_id, $old_password, $new_password, $confirm_password, $token) {
+        if ($action === "change") {
+            $sql = "SELECT password FROM user WHERE user_id = ?";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param("s", $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $user = $result->fetch_assoc();
+    
+            if (password_verify($old_password, $user['password'])) {
+                if ($new_password === $confirm_password) {
+                    $hashedPassword = password_hash($new_password, PASSWORD_BCRYPT);
+                    $sql = "UPDATE user SET password = ? WHERE user_id = ?";
+                    $stmt = $this->conn->prepare($sql);
+                    $stmt->bind_param("ss", $hashedPassword, $user_id);
+                    if ($stmt->execute()) {
+                        return true;
+                    } else {
+                        return "Error: Please try again later. ";
+                    }
+                } else {
+                    return "Passwords does not match.";
+                }
+            } else{
+                return "Old password does not match.";
+            }
+        } else if ($action === "reset") {
+            $query = mysqli_query($this->conn, "SELECT * FROM forget_pass_token WHERE token='$token' LIMIT 1");
+            if (mysqli_num_rows($query) == 1) {
+                $row = mysqli_fetch_assoc($query);
+                $user_id = $row['user_id'];
+                if ($new_password === $confirm_password) {
+                    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+                    mysqli_query($this->conn, "UPDATE user SET password='$hashed_password' WHERE user_id='$user_id'");
+                    mysqli_query($this->conn, "DELETE FROM forget_pass_token WHERE user_id='$user_id'");
+                    return true;
+                } else {
+                    return "Your new password and confirm password do not match.";
+                }
+            } else {
+                return "Invalid or expired token.";
+            }
+        }
+    }
+
+    // Forgot Password Request
+    public function requestForgotPassword($email) {
+        $check_user = mysqli_query($this->conn, "SELECT * FROM user WHERE email='$email'");
+
+        if (mysqli_num_rows($check_user) > 0) {
+            $env = loadEnv(__DIR__ . '/../src/.env');
+            
+            $token = bin2hex(random_bytes(50));
+            $expires = time() + 1800;  //30 minutes
+            $row = mysqli_fetch_assoc($check_user);
+            $user_id = $row['user_id'];
+            mysqli_query($this->conn, "INSERT INTO forget_pass_token (user_id, email, token) VALUES ('$user_id', '$email', '$token')");
+            
+            $encodedToken = urlencode($token);
+            $encodedExpires = urlencode($expires);
+
+            $resetUrl = "http://localhost/serverside_asg/view/change_password?token={$encodedToken}&expires={$encodedExpires}";
+            
+            $mail = new PHPMailer(true);
+
+            $mail->isSMTP(); 
+            $mail->Host = $env['MAIL_HOST'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $env['MAIL_USERNAME']; // SMTP username
+            $mail->Password = $env['MAIL_PASSWORD']; // SMTP password
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; 
+            $mail->Port = $env['MAIL_PORT']; 
+        
+            //Recipients
+            $mail->setFrom($env['MAIL_USERNAME'], 'Admin'); // Sender's email and name
+            $mail->addAddress($email, 'User'); 
+        
+            //Content
+            $mail->isHTML(true); 
+            $htmlContent = file_get_contents('forget_pass_html.html');
+
+            $htmlContent = str_replace('{{resetLink}}', $resetUrl, $htmlContent);
+        
+            $mail->Subject = 'Password Reset Request';
+            $mail->Body    = $htmlContent;
+            $mail->AltBody = 'To reset your password, click the link below: ' . $resetUrl; 
+            
+            if($mail->send()) {
+                return true;
+            } else {
+                return "Failed to send email.";
+            }
+        } else {
+            echo "<p>Email not found.</p>";
+        }
     }
 
     // Check if user is Superadmin

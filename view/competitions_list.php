@@ -43,7 +43,7 @@ $comps = $compController->getAllComp();
                         <?php endif; ?>
                     <div class="col-lg-4 col-md-6 col-sm-12 col-xl-4 d-flex justify-content-center mb-4">
                         <div class="card border shadow-sm" style="width: 100%;">
-                            <img src="../uploads/comp/<?php echo $comp['comp_image'] ?? 'default_comp.png'; ?>" class="card-img-top" alt="Competition Image" style="height: 200px; object-fit: cover;">
+                            <img src="<?= (!empty($comp['comp_image']) ? '../uploads/comp/' . $comp['comp_image'] : '../assets/images/default_comp.png'); ?>" class="card-img-top" alt="Competition Image" style="height: 200px; object-fit: cover;">
                             <div class="d-flex flex-column card-body justify-content-between p-3 text-start">
                                 <h5 class="card-title"><?php echo htmlspecialchars($comp['comp_title']); ?></h5>
                                 <p class="card-text"><?php echo htmlspecialchars(substr($comp['comp_desc'], 0, 50)) . '...'; ?></p>

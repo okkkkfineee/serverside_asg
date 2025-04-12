@@ -29,10 +29,20 @@ class UserController {
     public function register($username, $email, $password, $confirmPassword, $roles, $bio, $createdTime) {
         return $this->userModel->register($username, $email, $password, $confirmPassword, $roles, $bio, $createdTime);
     }
-
+    
     // Handles logout logic
     public function logout() {
         return $this->userModel->logout();
+    }
+
+    // Change/reset Password
+    function changePassword($action, $user_id, $old_password, $new_password, $confirm_password, $token) {
+        return $this->userModel->changePassword($action, $user_id, $old_password, $new_password, $confirm_password, $token);
+    }
+
+    // Forgot Password Request
+    public function requestForgotPassword($email) {
+        return $this->userModel->requestForgotPassword($email);
     }
 
     // Check if user is Superadmin
