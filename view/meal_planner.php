@@ -38,14 +38,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = $mealPlanningController->createMealPlan($recipe_id, $user_id, $plan_name, $meal_category, $meal_time, $meal_date);
             
             if ($result) {
-                $success_message = "Meal plan added successfully!";
-                // Refresh meal plans
-                $userMealPlans = $mealPlanningController->getUserMealPlans($_SESSION['user_id']);
+                // Store success message in session
+                $_SESSION['success_message'] = "Meal plan added successfully!";
+                // Redirect to GET request
+                header("Location: meal_planner.php");
+                exit();
             } else {
                 $error_message = "Failed to add meal plan. Please try again.";
             }
+        } elseif ($_POST['action'] === 'delete_multiple') {
+            if (isset($_POST['plan_ids'])) {
+                $plan_ids = json_decode($_POST['plan_ids']);
+                $success = true;
+                
+                foreach ($plan_ids as $plan_id) {
+                    $result = $mealPlanningController->deleteMealPlan($plan_id);
+                    if (!$result) {
+                        $success = false;
+                        break;
+                    }
+                }
+                
+                if ($success) {
+                    $_SESSION['success_message'] = count($plan_ids) . " meal plan(s) deleted successfully!";
+                } else {
+                    $_SESSION['error_message'] = "Failed to delete some meal plans. Please try again.";
+                }
+                
+                header("Location: meal_planner.php");
+                exit();
+            }
         }
     }
+}
+
+// Get success/error messages from session
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
+if (isset($_SESSION['error_message'])) {
+    $error_message = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
 }
 ?>
 
@@ -67,42 +101,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-            
-            // Prepare events data from PHP
-            var events = [];
-            <?php if ($filteredMealPlans && $filteredMealPlans->num_rows > 0): ?>
-                <?php while ($plan = $filteredMealPlans->fetch_assoc()): ?>
-                    events.push({
-                        id: '<?php echo $plan['plan_id']; ?>',
-                        title: '<?php echo htmlspecialchars($plan['plan_name']); ?>',
-                        start: '<?php echo $plan['meal_date']; ?>',
-                        extendedProps: {
-                            plan_id: '<?php echo $plan['plan_id']; ?>',
-                            meal_category: '<?php echo htmlspecialchars($plan['meal_category']); ?>',
-                            meal_time: '<?php echo $plan['meal_time']; ?>'
-                        }
-                    });
-                <?php endwhile; ?>
-            <?php endif; ?>
-            
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                selectable: true,
-                events: events,
-                eventClick: function(info) {
-                    // Navigate to meal plan details
-                    window.location.href = 'view_meal_plan.php?plan_id=' + info.event.extendedProps.plan_id;
-                },
-                select: function(info) {
-                    // Set the selected date in the meal date field
-                    document.getElementById('meal_date').value = info.startStr;
-                    var modal = new bootstrap.Modal(document.getElementById('mealModal'));
-                    modal.show();
-                }
+            var calendar = null;
+
+            function initializeCalendar() {
+                var calendarEl = document.getElementById('calendar');
+                
+                // Prepare events data from PHP
+                var events = [];
+                <?php if ($filteredMealPlans && $filteredMealPlans->num_rows > 0): ?>
+                    <?php 
+                    $filteredMealPlans->data_seek(0);
+                    while ($plan = $filteredMealPlans->fetch_assoc()): 
+                    ?>
+                        events.push({
+                            id: '<?php echo $plan['plan_id']; ?>',
+                            title: '<?php echo htmlspecialchars($plan['plan_name']); ?>',
+                            start: '<?php echo $plan['meal_date']; ?>',
+                            extendedProps: {
+                                plan_id: '<?php echo $plan['plan_id']; ?>',
+                                meal_category: '<?php echo htmlspecialchars($plan['meal_category']); ?>',
+                                meal_time: '<?php echo $plan['meal_time']; ?>'
+                            }
+                        });
+                    <?php endwhile; ?>
+                <?php endif; ?>
+                
+                calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    selectable: true,
+                    events: events,
+                    eventClick: function(info) {
+                        window.location.href = 'view_meal_plan.php?plan_id=' + info.event.extendedProps.plan_id;
+                    },
+                    select: function(info) {
+                        document.getElementById('meal_date').value = info.startStr;
+                        var modal = new bootstrap.Modal(document.getElementById('mealModal'));
+                        modal.show();
+                    }
+                });
+                calendar.render();
+            }
+
+            // Initialize calendar on page load
+            initializeCalendar();
+
+            // Handle form submission
+            document.querySelector('form[action=""]').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                
+                fetch('meal_planner.php', {
+                    method: 'POST',
+                    body: formData,
+                    redirect: 'follow' // Follow redirects
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        return response.text().then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const errorMessage = doc.querySelector('.alert-danger');
+                            if (errorMessage) {
+                                alert(errorMessage.textContent);
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while saving the meal plan.');
+                });
             });
-            calendar.render();
-            
+
             // Toggle between existing recipe and new recipe
             document.getElementById('mealSource').addEventListener('change', function() {
                 var existingRecipeSection = document.getElementById('existingRecipeSection');
@@ -134,11 +207,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if (isset($_GET['deleted']) && $_GET['deleted'] == 1): ?>
             <div class="alert alert-success">Meal plan deleted successfully!</div>
         <?php endif; ?>
+
+        <!-- Multi-delete action bar -->
+        <div id="deleteActionBar" class="action-bar" style="display: none;">
+            <div class="action-bar-content">
+                <span id="selectedCount">0 items selected</span>
+                <button class="btn btn-danger" onclick="deleteSelectedPlans()">Delete Selected</button>
+            </div>
+        </div>
         
         <div class="row">
             <!-- Sidebar -->
             <div class="col-md-3 sidebar">
-                <h4>Meal Categories</h4>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Meal Categories</h4>
+                </div>
                 <nav class="meal-categories">
                     <a href="meal_planner.php?category=All" class="meal-category <?php echo $selectedCategory === 'All' ? 'active' : ''; ?>">All</a>
                     <a href="meal_planner.php?category=Breakfast" class="meal-category <?php echo $selectedCategory === 'Breakfast' ? 'active' : ''; ?>">Breakfast</a>
@@ -147,10 +230,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <a href="meal_planner.php?category=Snacks" class="meal-category <?php echo $selectedCategory === 'Snacks' ? 'active' : ''; ?>">Snacks</a>
                 </nav>
                 
-                <h4 class="mt-4">Your Meal Plans</h4>
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <h4 class="mb-0">Your Meal Plans</h4>
+                    <button id="toggleDelete" class="btn btn-outline-danger btn-sm" onclick="toggleDeleteMode()">
+                        <img src="../uploads/meal_planner/trash.png" alt="Delete" style="width: 20px; height: 20px;">
+                    </button>
+                </div>
                 <div class="meal-plans-list">
                     <?php 
-                    // Reset the pointer to the beginning of the result set
                     if ($filteredMealPlans) {
                         $filteredMealPlans->data_seek(0);
                         
@@ -158,18 +245,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             while ($plan = $filteredMealPlans->fetch_assoc()): 
                     ?>
                         <div class="meal-plan-item">
-                            <a href="view_meal_plan.php?plan_id=<?php echo $plan['plan_id']; ?>" class="text-decoration-none text-dark">
-                                <strong><?php echo htmlspecialchars($plan['plan_name']); ?></strong><br>
-                                <small>Category: <?php echo htmlspecialchars($plan['meal_category']); ?><br>
-                                Time: <?php 
-                                    $hour = (int)$plan['meal_time'];
-                                    $period = $hour >= 12 ? 'PM' : 'AM';
-                                    $displayHour = $hour % 12;
-                                    $displayHour = $displayHour == 0 ? 12 : $displayHour;
-                                    echo $displayHour . ':00 ' . $period;
-                                ?><br>
-                                Date: <?php echo date('F j, Y', strtotime($plan['meal_date'])); ?></small>
-                            </a>
+                            <div class="d-flex align-items-center">
+                                <div class="meal-plan-checkbox" style="display: none;">
+                                    <input type="checkbox" class="form-check-input me-2" value="<?php echo $plan['plan_id']; ?>">
+                                </div>
+                                <a href="view_meal_plan.php?plan_id=<?php echo $plan['plan_id']; ?>" class="text-decoration-none text-dark flex-grow-1">
+                                    <strong><?php echo htmlspecialchars($plan['plan_name']); ?></strong><br>
+                                    <small>Category: <?php echo htmlspecialchars($plan['meal_category']); ?><br>
+                                    Time: <?php 
+                                        $hour = (int)$plan['meal_time'];
+                                        $period = $hour >= 12 ? 'PM' : 'AM';
+                                        $displayHour = $hour % 12;
+                                        $displayHour = $displayHour == 0 ? 12 : $displayHour;
+                                        echo $displayHour . ':00 ' . $period;
+                                    ?><br>
+                                    Date: <?php echo date('F j, Y', strtotime($plan['meal_date'])); ?></small>
+                                </a>
+                            </div>
                         </div>
                     <?php 
                             endwhile; 
@@ -284,6 +376,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let deleteMode = false;
 
+        function toggleDeleteMode() {
+            deleteMode = !deleteMode;
+            const checkboxes = document.querySelectorAll('.meal-plan-checkbox');
+            const actionBar = document.getElementById('deleteActionBar');
+            const mealPlanItems = document.querySelectorAll('.meal-plan-item');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.style.display = deleteMode ? 'block' : 'none';
+            });
+            
+            mealPlanItems.forEach(item => {
+                item.classList.toggle('delete-mode');
+            });
+            
+            if (deleteMode) {
+                actionBar.style.display = 'block';
+                setTimeout(() => actionBar.classList.add('show'), 10);
+            } else {
+                actionBar.classList.remove('show');
+                setTimeout(() => actionBar.style.display = 'none', 300);
+                // Uncheck all checkboxes
+                document.querySelectorAll('.meal-plan-checkbox input').forEach(cb => cb.checked = false);
+                updateSelectedCount();
+            }
+        }
+
+        function updateSelectedCount() {
+            const count = document.querySelectorAll('.meal-plan-checkbox input:checked').length;
+            document.getElementById('selectedCount').textContent = `${count} item${count !== 1 ? 's' : ''} selected`;
+        }
+
+        // Add event listeners to checkboxes
+        document.querySelectorAll('.meal-plan-checkbox input').forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+
+        function deleteSelectedPlans() {
+            const selectedPlans = document.querySelectorAll('.meal-plan-checkbox input:checked');
+            if (selectedPlans.length === 0) {
+                alert('Please select at least one meal plan to delete.');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to delete ${selectedPlans.length} meal plan(s)?`)) {
+                const planIds = Array.from(selectedPlans).map(checkbox => checkbox.value);
+                
+                const formData = new FormData();
+                formData.append('action', 'delete_multiple');
+                formData.append('plan_ids', JSON.stringify(planIds));
+
+                fetch('meal_planner.php', {
+                    method: 'POST',
+                    body: formData,
+                    redirect: 'follow'
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        return response.text().then(text => {
+                            try {
+                                const data = JSON.parse(text);
+                                if (data.error) {
+                                    alert(data.error);
+                                }
+                            } catch (e) {
+                                console.error('Error parsing response:', e);
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting meal plans. Please try again.');
+                });
+            }
+        }
+
+        // Prevent clicking on meal plan links when in delete mode
+        document.querySelectorAll('.meal-plan-item a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (deleteMode) {
+                    e.preventDefault();
+                    const checkbox = link.parentElement.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                    updateSelectedCount();
+                }
+            });
+        });
+
+        document.getElementById('deleteSelected').addEventListener('click', deleteSelectedPlans);
+    </script>
 </body>
 </html>

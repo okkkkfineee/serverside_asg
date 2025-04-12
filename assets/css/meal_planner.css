@@ -104,3 +104,60 @@ body {
         margin-bottom: 20px;
     }
 }
+
+/* Action Bar */
+.action-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #343a40;
+    color: white;
+    padding: 1rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.action-bar.show {
+    transform: translateY(0);
+}
+
+.action-bar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Delete Mode Styles */
+.meal-plan-checkbox {
+    margin-right: 10px;
+}
+
+.meal-plan-item.delete-mode {
+    background-color: #fff3f3;
+}
+
+#toggleDelete {
+    padding: 6px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#toggleDelete img {
+    transition: filter 0.3s ease;
+}
+
+#toggleDelete.active {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+#toggleDelete.active img {
+    filter: brightness(0) invert(1);
+}
