@@ -102,8 +102,16 @@ $allRecipes = $recipeController->getAllRecipes();
         <div class="row">
             <div class="col-md-8">
                 <div class="card mb-4">
-                    <div class="card-header">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Meal Plan Details</h5>
+                        <div>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">
+                                Edit Plan
+                            </button>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                Delete Plan
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -121,16 +129,8 @@ $allRecipes = $recipeController->getAllRecipes();
                     </div>
                 </div>
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="card-header">
                         <h4>Recipe</h4>
-                        <div>
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">
-                                Edit Plan
-                            </button>
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                Delete Plan
-                            </button>
-                        </div>
                     </div>
                     <div class="card-body">
                         <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
