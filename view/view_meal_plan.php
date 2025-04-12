@@ -102,21 +102,23 @@ $allRecipes = $recipeController->getAllRecipes();
         <div class="row">
             <div class="col-md-8">
                 <div class="card mb-4">
-                    <div class="card-header">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Meal Plan Details</h5>
+                        <div>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">
+                                Edit Plan
+                            </button>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                Delete Plan
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <p><strong>Plan Name:</strong> <?php echo htmlspecialchars($plan['plan_name']); ?></p>
                                 <p><strong>Meal Category:</strong> <?php echo htmlspecialchars($plan['meal_category']); ?></p>
-                                <p><strong>Meal Time:</strong> <?php 
-                                    $hour = (int)$plan['meal_time'];
-                                    $period = $hour >= 12 ? 'PM' : 'AM';
-                                    $displayHour = $hour % 12;
-                                    $displayHour = $displayHour == 0 ? 12 : $displayHour;
-                                    echo $displayHour . ':00 ' . $period;
-                                ?></p>
+                                <p><strong>Meal Time:</strong> <?php echo htmlspecialchars($plan['formatted_time']); ?></p>
                                 <p><strong>Meal Date:</strong> <?php echo date('F j, Y', strtotime($plan['meal_date'])); ?></p>
                             </div>
                             <div class="col-md-6">
@@ -127,16 +129,8 @@ $allRecipes = $recipeController->getAllRecipes();
                     </div>
                 </div>
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="card-header">
                         <h4>Recipe</h4>
-                        <div>
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">
-                                Edit Plan
-                            </button>
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                Delete Plan
-                            </button>
-                        </div>
                     </div>
                     <div class="card-body">
                         <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
@@ -206,16 +200,68 @@ $allRecipes = $recipeController->getAllRecipes();
                         <div class="mb-3">
                             <label for="meal_time" class="form-label">Meal Time</label>
                             <select class="form-select" id="meal_time" name="meal_time" required>
-                                <?php for($i = 0; $i < 24; $i++): ?>
-                                    <option value="<?php echo $i; ?>" <?php echo ($plan['meal_time'] == $i) ? 'selected' : ''; ?>>
-                                        <?php 
+                                <?php 
+                                // Define time ranges for each category
+                                $timeRanges = [
+                                    'Breakfast' => ['start' => '05:00', 'end' => '11:30'],
+                                    'Lunch' => ['start' => '11:30', 'end' => '16:30'],
+                                    'Dinner' => ['start' => '17:00', 'end' => '22:30'],
+                                    'Snacks' => ['start' => '00:00', 'end' => '23:30']
+                                ];
+                                
+                                // Get the current category
+                                $currentCategory = $plan['meal_category'];
+                                
+                                // Generate time options for the current category
+                                if (isset($timeRanges[$currentCategory])) {
+                                    $range = $timeRanges[$currentCategory];
+                                    
+                                    list($startHour, $startMin) = explode(':', $range['start']);
+                                    list($endHour, $endMin) = explode(':', $range['end']);
+                                    
+                                    $startTime = ($startHour * 60) + $startMin;
+                                    $endTime = ($endHour * 60) + $endMin;
+                                    
+                                    for ($time = $startTime; $time <= $endTime; $time += 30) {
+                                        $hours = floor($time / 60);
+                                        $minutes = $time % 60;
+                                        $timeStr = sprintf("%02d:%02d", $hours, $minutes);
+                                        
+                                        // Format for display
+                                        $displayHour = $hours % 12;
+                                        $displayHour = $displayHour == 0 ? 12 : $displayHour;
+                                        $period = $hours >= 12 ? 'PM' : 'AM';
+                                        $displayTime = sprintf("%d:%02d %s", $displayHour, $minutes, $period);
+                                        
+                                        // Check if this is the selected time
+                                        $isSelected = false;
+                                        if (strpos($plan['formatted_time'], $timeStr) !== false) {
+                                            $isSelected = true;
+                                        }
+                                        
+                                        echo "<option value=\"$timeStr\" " . ($isSelected ? 'selected' : '') . ">$displayTime</option>";
+                                    }
+                                } else {
+                                    // Fallback for Snacks or any other category
+                                    for($i = 0; $i < 24; $i++): 
+                                        for($j = 0; $j < 60; $j += 30):
+                                            $timeStr = sprintf("%02d:%02d", $i, $j);
                                             $period = $i >= 12 ? 'PM' : 'AM';
                                             $displayHour = $i % 12;
                                             $displayHour = $displayHour == 0 ? 12 : $displayHour;
-                                            echo $displayHour . ':00 ' . $period;
-                                        ?>
-                                    </option>
-                                <?php endfor; ?>
+                                            $displayTime = sprintf("%d:%02d %s", $displayHour, $j, $period);
+                                            
+                                            // Check if this is the selected time
+                                            $isSelected = false;
+                                            if (strpos($plan['formatted_time'], $timeStr) !== false) {
+                                                $isSelected = true;
+                                            }
+                                            
+                                            echo "<option value=\"$timeStr\" " . ($isSelected ? 'selected' : '') . ">$displayTime</option>";
+                                        endfor;
+                                    endfor;
+                                }
+                                ?>
                             </select>
                         </div>
 
@@ -271,5 +317,89 @@ $allRecipes = $recipeController->getAllRecipes();
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to update time options based on selected category
+        function updateTimeBasedOnCategory() {
+            const category = document.getElementById('meal_category').value;
+            const timeSelect = document.getElementById('meal_time');
+            
+            // Define time ranges for each category
+            const timeRanges = {
+                'Breakfast': { start: '05:00', end: '11:30' },
+                'Lunch': { start: '11:30', end: '16:30' },
+                'Dinner': { start: '17:00', end: '22:30' },
+                'Snacks': { start: '00:00', end: '23:30' }
+            };
+            
+            // Clear existing options
+            timeSelect.innerHTML = '';
+            
+            if (category && timeRanges[category]) {
+                const range = timeRanges[category];
+                
+                // Parse start and end times
+                const [startHour, startMin] = range.start.split(':').map(Number);
+                const [endHour, endMin] = range.end.split(':').map(Number);
+                
+                // Convert to minutes for easier calculation
+                const startTime = (startHour * 60) + startMin;
+                const endTime = (endHour * 60) + endMin;
+                
+                // Generate options in 30-minute intervals
+                for (let time = startTime; time <= endTime; time += 30) {
+                    const hours = Math.floor(time / 60);
+                    const minutes = time % 60;
+                    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                    
+                    // Format for display
+                    const displayHour = hours % 12 || 12;
+                    const period = hours >= 12 ? 'PM' : 'AM';
+                    const displayTime = `${displayHour}:${String(minutes).padStart(2, '0')} ${period}`;
+                    
+                    const option = document.createElement('option');
+                    option.value = timeStr;
+                    option.textContent = displayTime;
+                    
+                    // Check if this is the current selected time
+                    const currentTime = '<?php echo $plan['formatted_time']; ?>';
+                    if (currentTime.includes(timeStr)) {
+                        option.selected = true;
+                    }
+                    
+                    timeSelect.appendChild(option);
+                }
+            } else if (category === 'Snacks') {
+                // For Snacks, show all times in 30-minute intervals
+                for (let i = 0; i < 24; i++) {
+                    for (let j = 0; j < 60; j += 30) {
+                        const timeStr = `${String(i).padStart(2, '0')}:${String(j).padStart(2, '0')}`;
+                        const displayHour = i % 12 || 12;
+                        const period = i >= 12 ? 'PM' : 'AM';
+                        const displayTime = `${displayHour}:${String(j).padStart(2, '0')} ${period}`;
+                        
+                        const option = document.createElement('option');
+                        option.value = timeStr;
+                        option.textContent = displayTime;
+                        
+                        // Check if this is the current selected time
+                        const currentTime = '<?php echo $plan['formatted_time']; ?>';
+                        if (currentTime.includes(timeStr)) {
+                            option.selected = true;
+                        }
+                        
+                        timeSelect.appendChild(option);
+                    }
+                }
+            }
+        }
+        
+        // Add event listener to update time options when category changes
+        document.getElementById('meal_category').addEventListener('change', updateTimeBasedOnCategory);
+        
+        // Initialize time options on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTimeBasedOnCategory();
+        });
+    </script>
 </body>
 </html>
