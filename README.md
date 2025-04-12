@@ -32,6 +32,7 @@ Users can sign in using their credentials.
 - /controllers           # Logic for handling requests and business logic  
 - /excel                 # Store excel file for testing  
 - /includes              # Shared UI components, e.g. header, footer  
+- /libs                  # Library used, PHPMailer  
 - /models                # Database models and entity classes  
 - /sql                   # SQL file  
 - /src                   # Store env  
