@@ -82,9 +82,49 @@ body {
 .meal-plan-item {
     padding: 10px;
     margin-bottom: 10px;
-    background-color: #e9ecef;
     border-radius: 5px;
-    border-left: 4px solid #0d6efd;
+    transition: all 0.3s ease;
+    border-left: 4px solid;
+}
+
+/* Category-specific colors */
+.meal-plan-item[data-category="Breakfast"] {
+    background-color: #fff3e0;
+    border-left-color: #ff9800;
+}
+
+.meal-plan-item[data-category="Lunch"] {
+    background-color: #e8f5e9;
+    border-left-color: #4caf50;
+}
+
+.meal-plan-item[data-category="Dinner"] {
+    background-color: #e3f2fd;
+    border-left-color: #2196f3;
+}
+
+.meal-plan-item[data-category="Snacks"] {
+    background-color: #f3e5f5;
+    border-left-color: #9c27b0;
+}
+
+/* Past date styling */
+.meal-plan-item.past-date {
+    opacity: 0.85;
+    background-color: #808080 !important;
+    border-left-color: #696969 !important;
+}
+
+.meal-plan-item.past-date a {
+    color: #ffffff !important;
+}
+
+.meal-plan-item.past-date:hover {
+    background-color: #696969 !important;
+}
+
+.meal-plan-item:hover {
+    transform: translateX(5px);
 }
 
 /* Modal */
