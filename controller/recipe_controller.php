@@ -40,5 +40,9 @@ class RecipeController {
     public function deleteRecipe($recipe_id) {
         return $this->recipeModel->deleteRecipe($recipe_id);
     }
+
+    public function getMatchedRecipes($comp_theme) {
+        return $this->recipeModel->getMatchedRecipes($comp_theme);
+    }
 }
 ?>

@@ -126,7 +126,7 @@ $recipes = $recipeController->filterRecipes($title, $cuisine, $difficulty);
                         <?php foreach ($recipes as $recipe) : ?>
                         <div class="col-lg-4 col-md-6 col-sm-12 col-xl-3 d-flex justify-content-center mb-4">
                             <div class="card border shadow-sm" style="width: 100%; max-width: 20rem; height: 100%;">
-                                <img src="../uploads/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top rounded-top" alt="Recipe Image" style="width: 100%; height: 200px; object-fit: cover;">
+                                <img src="../uploads/recipes/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top rounded-top" alt="Recipe Image" style="width: 100%; height: 200px; object-fit: cover;">
                                 <div class="d-flex flex-column card-body justify-content-between p-3 text-start" style=" flex-grow: 1;">
                                     <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
                                     <p class="card-text">Cuisine Type: <?php echo htmlspecialchars($recipe['cuisine']); ?><br> Difficulty: 

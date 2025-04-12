@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $confirmPassword = mysqli_real_escape_string($conn, $_POST['confirmPassword']);
         
         // Default Values
-        $roles = "user";
+        $roles = "User";
         $bio = "No bio yet.";
         $createdTime = date('Y-m-d H:i:s');
         $result = $userController->register($username, $email, $password, $confirmPassword, $roles, $bio, $createdTime);
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="mb-2 form-check">
                                 <input type="checkbox" class="form-check-input" name="rememberMe" id="rememberMe">
                                 <label class="form-check-label" for="rememberMe" style='font-size:14px;'>Remember Me</label>
-                                <a href="#" class="text-decoration-none float-end" style='font-size:12px;'> Forgot Password?</a>
+                                <a href="forgot_password" class="text-decoration-none float-end" style='font-size:12px;'> Forgot Password?</a>
                             </div>
                             <?php if (isset($error)) echo "<p class='text-danger'>$error</p>"; ?> 
                             

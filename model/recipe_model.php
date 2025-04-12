@@ -146,7 +146,7 @@ class Recipe {
             return $result;
         }
 
-        $target_dir = "../uploads/";
+        $target_dir = "../uploads/recipes/";
         $allowedExtensions = ['jpg', 'jpeg', 'png'];
         $maxFileSize = 2 * 1024 * 1024; // 2MB
     
@@ -312,7 +312,7 @@ class Recipe {
         $stmt->close();
     
         if (!empty($images)) {
-            $image_path = "uploads/" . $images;
+            $image_path = "uploads/recipes/" . $images;
             if (file_exists($image_path)) {
                 unlink($image_path);
             }
@@ -323,5 +323,53 @@ class Recipe {
         $stmt->execute();
         return true;
     }
+
+    public function getMatchedRecipes($comp_theme) {
+        $cuisine = ['Any', 'Chinese', 'Indian', 'Japanese', 'Malay', 'Thai', 'Western'];
+        $cooking_time = ['Under 15 Minutes', 'Under 30 Minutes', 'Under 1 Hour', 'Slow Cooked'];
+        $difficulty = [
+            'Beginner-Friendly' => 1,
+            'Easy' => 2,
+            'Moderate' => 3,
+            'Challenging' => 4,
+            'Expert-Level' => 5
+        ];
+    
+        if (in_array($comp_theme, $cuisine)) {
+            if ($comp_theme === 'Any') {
+                $sql = "SELECT * FROM recipe";
+                $stmt = $this->conn->prepare($sql);
+            } else {
+                $sql = "SELECT * FROM recipe WHERE cuisine = ?";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("s", $comp_theme);
+            }
+        } elseif (in_array($comp_theme, $cooking_time)) {
+            if ($comp_theme === 'Under 15 Minutes') {
+                $sql = "SELECT * FROM recipe WHERE cooking_time < 15";
+                $stmt = $this->conn->prepare($sql);
+            } elseif ($comp_theme === 'Under 30 Minutes') {
+                $sql = "SELECT * FROM recipe WHERE cooking_time < 30";
+                $stmt = $this->conn->prepare($sql);
+            } elseif ($comp_theme === 'Under 1 Hour') {
+                $sql = "SELECT * FROM recipe WHERE cooking_time < 60";
+                $stmt = $this->conn->prepare($sql);
+            } elseif ($comp_theme === 'Slow Cooked') {
+                $sql = "SELECT * FROM recipe WHERE cooking_time >= 60";
+                $stmt = $this->conn->prepare($sql);
+            }
+        } elseif (array_key_exists($comp_theme, $difficulty)) {
+            $level = $difficulty[$comp_theme];
+            $sql = "SELECT * FROM recipe WHERE difficulty = ?";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param("i", $level);
+        } else {
+            return [];
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+    
 }
 ?>
