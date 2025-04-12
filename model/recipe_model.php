@@ -146,7 +146,9 @@ class Recipe {
             return $result;
         }
 
+
         $target_dir = "../uploads/recipes/";
+
         $allowedExtensions = ['jpg', 'jpeg', 'png'];
         $maxFileSize = 2 * 1024 * 1024; // 2MB
     
