@@ -558,7 +558,7 @@ if (isset($_SESSION['error_message'])) {
 <body>
     <?php include '../includes/header.php'; ?>
 
-    <div class="container mt-4">
+    <div class="container">
         <?php if (isset($success_message)): ?>
             <div class="alert alert-success"><?php echo $success_message; ?></div>
         <?php endif; ?>
@@ -596,7 +596,7 @@ if (isset($_SESSION['error_message'])) {
                 <div class="d-flex justify-content-between align-items-center mt-4">
                     <h4 class="mb-0">Your Meal Plans</h4>
                     <button id="toggleDelete" class="btn btn-outline-danger btn-sm" onclick="toggleDeleteMode()">
-                        <img src="../uploads/meal_planner/trash.png" alt="Delete" style="width: 20px; height: 20px;">
+                        <img src="..\assets\images\meal_planner\trash.png" alt="Delete" style="width: 20px; height: 20px;">
                     </button>
                 </div>
                 <div class="meal-plans-list">

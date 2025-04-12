@@ -1,10 +1,9 @@
 body {
     background-color: #f8f9fa;
-    padding-top: 20px;  /* Adds space at the top of the page */
 }
 
 .container {
-    margin-top: 20px;
+    margin-top: 0;
     padding-top: 15px;  /* Adds space inside the container */
 }
 
