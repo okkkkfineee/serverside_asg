@@ -75,7 +75,9 @@ if (!$recipe) {
                 </div>
                 <?php if (!empty($recipe['images'])): ?>
                     <div class="ms-3">
-                        <img src="../uploads/recipe/<?php echo htmlspecialchars($recipe['images']); ?>" 
+
+                        <img src="../uploads/recipes/<?php echo htmlspecialchars($recipe['images']); ?>" 
+
                              alt="<?php echo htmlspecialchars($recipe['title']); ?>" 
                              class="rounded shadow-sm img-fluid" style="width: 200px; height: auto; object-fit: cover;">
                     </div>
@@ -100,7 +102,7 @@ if (!$recipe) {
             </div>
 
             <div class="text-center mt-4" >
-                <a href="recipe_list.php" class="btn btn-success">Back</a>
+                <a href="javascript:window.history.back()" class="btn btn-success">Back</a>
             </div>
         </div>
     </div>

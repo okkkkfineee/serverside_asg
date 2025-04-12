@@ -1,0 +1,202 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.container {
+    margin-top: 0;
+    padding-top: 15px;  /* Adds space inside the container */
+}
+
+#calendar {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: 100%;
+}
+
+.sidebar h4 {
+    text-align: center;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    margin-bottom: 20px;
+}
+
+/* Meal Categories */
+.sidebar .meal-categories {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 15px !important;
+    margin-bottom: 20px !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 0 !important;
+}
+
+.sidebar .meal-categories .meal-category {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 80% !important;
+    padding: 12px 20px !important;
+    border: 2px solid #000 !important;
+    border-radius: 25px !important;
+    background-color: white !important;
+    color: #000 !important;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin: 0 !important;
+}
+
+.sidebar .meal-categories .meal-category:hover {
+    background-color: #f8f9fa !important;
+    color: #000 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.sidebar .meal-categories .meal-category.active {
+    background-color: #000 !important;
+    color: white !important;
+    border-color: #000 !important;
+}
+
+/* Meal Plans List */
+.meal-plans-list {
+    margin-top: 15px;
+}
+
+.meal-plan-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    border-left: 4px solid;
+}
+
+/* Category-specific colors */
+.meal-plan-item[data-category="Breakfast"] {
+    background-color: #fff3e0;
+    border-left-color: #ff9800;
+}
+
+.meal-plan-item[data-category="Lunch"] {
+    background-color: #e8f5e9;
+    border-left-color: #4caf50;
+}
+
+.meal-plan-item[data-category="Dinner"] {
+    background-color: #e3f2fd;
+    border-left-color: #2196f3;
+}
+
+.meal-plan-item[data-category="Snacks"] {
+    background-color: #f3e5f5;
+    border-left-color: #9c27b0;
+}
+
+/* Past date styling */
+.meal-plan-item.past-date {
+    opacity: 0.85;
+    background-color: #808080 !important;
+    border-left-color: #696969 !important;
+}
+
+.meal-plan-item.past-date a {
+    color: #ffffff !important;
+}
+
+.meal-plan-item.past-date:hover {
+    background-color: #696969 !important;
+}
+
+.meal-plan-item:hover {
+    transform: translateX(5px);
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 8px;
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        margin-bottom: 20px;
+    }
+}
+
+/* Action Bar */
+.action-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #343a40;
+    color: white;
+    padding: 1rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.action-bar.show {
+    transform: translateY(0);
+}
+
+.action-bar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Delete Mode Styles */
+.meal-plan-checkbox {
+    margin-right: 10px;
+}
+
+.meal-plan-item.delete-mode {
+    background-color: #fff3f3;
+}
+
+#toggleDelete {
+    padding: 6px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#toggleDelete img {
+    transition: filter 0.3s ease;
+}
+
+#toggleDelete.active {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+#toggleDelete.active img {
+    filter: brightness(0) invert(1);
+}
