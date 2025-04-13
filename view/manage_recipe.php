@@ -40,14 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return mysqli_real_escape_string($conn, $step);
     }, $_POST['steps']);
 
-    $existingRecipe = $recipeController->getRecipe($recipe_id);
-    $old_image = $existingRecipe ? $existingRecipe['images'] : null;
-
-    if (!empty($_FILES["image"]["name"])) {
-        $image = $user_id . '_' . basename($_FILES["image"]["name"]);
-    } else {
-        $image = $old_image;
-    }
+    $image = $_FILES['image'] ?? null;
 
     if (isset($_POST['action']) && $_POST['action'] === 'Add') {
         $created_time = date("Y-m-d H:i:s");
@@ -86,6 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include '../includes/header.php'; ?>
 
     <div class="container mt-4">
+        <?php if (!empty($error)): ?>
+            <div class="alert alert-danger mt-3"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
         <?php if ($type === "add"): ?>
             <h2 class="text-center mb-3">Add New Recipe</h2>
             <form action="manage_recipe?type=add" method="POST" enctype="multipart/form-data">
@@ -286,6 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 input.value = words.slice(0, maxWords).join(' ');
             }
         }
+        
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
