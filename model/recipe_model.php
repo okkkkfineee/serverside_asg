@@ -152,25 +152,37 @@ class Recipe {
     
         if ($action === 'add') {
         // Handle Image Upload
-        if (!empty($image)) {
+        if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $uploadError = $_FILES['image']['error'];
+        
+            if ($uploadError === UPLOAD_ERR_INI_SIZE || $uploadError === UPLOAD_ERR_FORM_SIZE || $_FILES['image']['size'] > $maxFileSize) {
+                return "File size exceeds the maximum limit of 2MB.";
+            }
+        
+            if ($uploadError !== UPLOAD_ERR_OK) {
+                return "File upload error: " . $uploadError;
+            }
+        
+            $image = $user_id . '_' . basename($_FILES["image"]["name"]);
+            $image_file_type = strtolower(pathinfo($image, PATHINFO_EXTENSION));
+            $max_filename_length = 20;
+            $image_name_without_extension = pathinfo($image, PATHINFO_FILENAME);
+            if (strlen($image_name_without_extension) > $max_filename_length) {
+                $image_name_without_extension = substr($image_name_without_extension, 0, $max_filename_length);
+            }
+            $image = $image_name_without_extension . '.' . $image_file_type;
             $image_path = $target_dir . $image;
-            $image_file_type = strtolower(pathinfo($image_path, PATHINFO_EXTENSION));
+        
             if (!in_array($image_file_type, $allowedExtensions)) {
                 return "Only JPG, JPEG, and PNG files are allowed.";
             }
 
-            if ($_FILES['image']['size'] > $maxFileSize) {
-                return "File size exceeds the maximum limit of 2MB.";
-            }
-
-            if ($_FILES["image"]["error"] !== UPLOAD_ERR_OK) {
-                return "File upload error: " . $_FILES["image"]["error"];
-            }
         
             if (!move_uploaded_file($_FILES["image"]["tmp_name"], $image_path)) {
                 return "Error uploading image.";
             }
         }
+        
 
             $stmt = $this->conn->prepare("INSERT INTO recipe (user_id, title, description, images, cuisine, difficulty, cooking_time, created_time) 
                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -203,18 +215,31 @@ class Recipe {
             $old_image = $oldRecipe ? $oldRecipe['images'] : null;
             // Handle Image Upload (only jpg, jpeg, png)
             if (!empty($_FILES["image"]["name"])) {
-                $image = $user_id . '_' . basename($_FILES["image"]["name"]);
-                $image_path = $target_dir . $image;
-                $image_file_type = strtolower(pathinfo($image_path, PATHINFO_EXTENSION));
-
-                if (!in_array($image_file_type, ['jpg', 'jpeg', 'png'])) {
-                    return "Only JPG, JPEG, and PNG files are allowed.";
-                }
-
-                if ($_FILES['image']['size'] > $maxFileSize) {
+                $uploadError = $_FILES['image']['error'];
+            
+                if ($uploadError === UPLOAD_ERR_INI_SIZE || $uploadError === UPLOAD_ERR_FORM_SIZE || $_FILES['image']['size'] > $maxFileSize) {
                     return "File size exceeds the maximum limit of 2MB.";
                 }
+            
+                if ($uploadError !== UPLOAD_ERR_OK) {
+                    return "File upload error: " . $uploadError;
+                }
 
+                $image = $user_id . '_' . basename($_FILES["image"]["name"]);
+                $image_file_type = strtolower(pathinfo($image, PATHINFO_EXTENSION));
+                $max_filename_length = 20;
+                $image_name_without_extension = pathinfo($image, PATHINFO_FILENAME);
+                if (strlen($image_name_without_extension) > $max_filename_length) {
+                    $image_name_without_extension = substr($image_name_without_extension, 0, $max_filename_length);
+                }
+                $image = $image_name_without_extension . '.' . $image_file_type;
+                $image_path = $target_dir . $image;
+            
+                if (!in_array($image_file_type, $allowedExtensions)) {
+                    return "Only JPG, JPEG, and PNG files are allowed.";
+                }
+            
+                // Delete old image
                 if (!empty($old_image)) {
                     $oldFilePath = $target_dir . $old_image;
                     if (file_exists($oldFilePath) && !is_dir($oldFilePath)) {
@@ -222,15 +247,13 @@ class Recipe {
                     }
                 }
             
-                // Check for upload errors
-                if ($_FILES["image"]["error"] !== UPLOAD_ERR_OK) {
-                    return "File upload error: " . $_FILES["image"]["error"];
-                }
-
                 if (!move_uploaded_file($_FILES["image"]["tmp_name"], $image_path)) {
                     return "Error uploading image.";
                 }
+            } else {
+                $image = $old_image;
             }
+            
 
             $description = stripslashes($description);
             $stmt = $this->conn->prepare("UPDATE recipe SET title = ?, description = ?, images = ?, cuisine = ?, difficulty = ?, cooking_time = ? WHERE recipe_id = ?");
