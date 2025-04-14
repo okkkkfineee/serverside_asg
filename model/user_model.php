@@ -254,6 +254,57 @@ class User {
         return ['data' => $data, 'total' => $totalRecords];
     }
 
+    // Updating user info
+    public function updateUser($action, $user_id, $roles, $current_user_id) {
+        // Superadmin can update or delete any user but cannot update or delete their own account
+        // Admin can update or delete any user (except Superadmin and Admin) but cannot update or delete their own account
+        $current_user = $this->getUserInfo($current_user_id);
+        $target_user = $this->getUserInfo($user_id);
+        if ($current_user['roles'] === 'Superadmin') {
+            if ($target_user['user_id'] === $current_user['user_id']) {
+                return "Error: Cannot update or delete your own account.";
+            }
+            if ($action === 'update') {
+                $sql = "UPDATE user SET roles = ? WHERE user_id = ?";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("si", $roles, $user_id);
+                $stmt->execute();
+                return true;
+            } else if ($action === 'delete') {
+                $sql = "DELETE FROM user WHERE user_id = ?";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                return true;
+            }
+        } else if ($current_user['roles'] === 'Admin') {
+            if ($user_id === $current_user_id) {
+                return "Error: Cannot update or delete your own account.";
+            }
+            if ($action === 'update') {
+                if (in_array($target_user['roles'], ['Superadmin', 'Admin'])) {
+                    return "Error: You do not have permission to update this user.";
+                }
+                $sql = "UPDATE user SET roles = ? WHERE user_id = ?";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("si", $roles, $user_id);
+                $stmt->execute();
+                return true;
+            } else if ($action === 'delete') {
+                if (in_array($target_user['roles'], ['Superadmin', 'Admin'])) {
+                    return "Error: You do not have permission to delete this user.";
+                }
+                $sql = "DELETE FROM user WHERE user_id = ?";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                return true;
+            }
+        } else {
+            return "Error: You do not have permission to update this user.";
+        }
+    }
+
     //================ Profile ================
 
     // Get user info by ID

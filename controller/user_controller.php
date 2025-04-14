@@ -67,6 +67,11 @@ class UserController {
         return $this->userModel->getUserListPagination($filters, $offset, $limit);
     }
 
+    // Updating user info
+    public function updateUser($action, $user_id, $roles, $current_user_id) {
+        return $this->userModel->updateUser($action, $user_id, $roles, $current_user_id);
+    }
+
     //================ Profile ================
 
     // Getting user info by ID
