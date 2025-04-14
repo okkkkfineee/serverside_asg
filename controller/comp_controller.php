@@ -17,6 +17,10 @@ class CompetitionController {
         return $this->compModel->getAllComp();
     }
 
+    public function getAllCompWithFilters($filters) {
+        return $this->compModel->getAllCompWithFilters($filters);
+    }
+
     public function getUserComp($user_id) {
         return $this->compModel->getUserComp($user_id);
     }

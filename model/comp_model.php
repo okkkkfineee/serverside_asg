@@ -40,6 +40,65 @@ class Competition {
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
+    // Get all competition info with fileters
+    public function getAllCompWithFilters($filters) {
+        $sql = "SELECT * FROM competition WHERE 1";
+        $params = [];
+    
+        // Search filter
+        if (!empty($filters['search'])) {
+            $sql .= " AND comp_title LIKE ?";
+            $params[] = "%" . $filters['search'] . "%";
+        }
+    
+        // Theme filter
+        if (!empty($filters['theme'])) {
+            $sql .= " AND comp_theme = ?";
+            $params[] = $filters['theme'];
+        }
+    
+        // Status filter
+        if (!empty($filters['status'])) {
+            $statuses = $filters['status'];
+            $statusConditions = [];
+    
+            $today = date('Y-m-d');
+    
+            foreach ($statuses as $i => $status) {
+                if ($status === 'ongoing') {
+                    $statusConditions[] = "(end_date > ?)";
+                    $params[] = $today;
+                } elseif ($status === 'voting') {
+                    $statusConditions[] = "(end_date <= ? AND DATEDIFF(?, end_date) <= 10)";
+                    $params[] = $today;
+                    $params[] = $today;
+                } elseif ($status === 'ended') {
+                    $statusConditions[] = "(DATEDIFF(?, end_date) > 10)";
+                    $params[] = $today;
+                }
+            }
+    
+            if (!empty($statusConditions)) {
+                $sql .= " AND (" . implode(" OR ", $statusConditions) . ")";
+            }
+        }
+    
+        $sql .= " ORDER BY comp_id DESC";
+    
+        $stmt = $this->conn->prepare($sql);
+        if (count($params) > 0) {
+            $stmt->bind_param(str_repeat('s', count($params)), ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows === 0) {
+            return [['comp_title' => 'No competition available', 'comp_desc' => '']];
+        } else {
+            return $result->fetch_all(MYSQLI_ASSOC);
+        }
+    }
+    
+
     // Get all competition info user joined
     public function getUserComp($user_id) {
         $sql = "SELECT comp_entry.*, comp.* FROM competition_entry comp_entry 
@@ -210,9 +269,10 @@ class Competition {
     //================ Competition Entries ================
 
     public function getAllEntries($comp_id) {
-        $sql = "SELECT r.*, ce.*, COUNT(cv.vote_id) AS vote_count
+        $sql = "SELECT r.*, ce.*, u.username, COUNT(cv.vote_id) AS vote_count
                 FROM competition_entry ce
                 JOIN recipe r ON ce.recipe_id = r.recipe_id
+                JOIN user u ON r.user_id = u.user_id
                 LEFT JOIN competition_vote cv ON ce.entry_id = cv.entry_id
                 WHERE ce.comp_id = ?
                 GROUP BY ce.entry_id";

@@ -321,6 +321,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else if ((endDate - startDate) / (1000 * 60 * 60 * 24) < 10) {
                 alert('The duration between start date and end date cannot be lesser than 10 days.');
                 e.preventDefault();
+            } else if (startDate > new Date()) {
+                alert('Start date cannot be later than today.');
+                e.preventDefault();
             }
         });
     </script>

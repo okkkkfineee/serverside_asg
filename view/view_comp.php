@@ -9,9 +9,13 @@ require '../controller/comp_controller.php';
 
 $compController = new CompetitionController($conn);
 
+if (isset($_SESSION['id'])) {
+    $user_id = $_SESSION['user_id'];
+    $checkEntry = $compController->checkEntry($_GET['comp_id'], $user_id);
+}
+
 $comp = $compController->getComp($_GET['comp_id']);
 $allEntries = $compController->getAllEntries($_GET['comp_id']);
-$checkEntry = $compController->checkEntry($_GET['comp_id'], $_SESSION['user_id']);
 
 usort($allEntries, function ($a, $b) {
     return $b['vote_count'] - $a['vote_count'];
@@ -244,11 +248,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ?>
                     <div class="col-md-4">
                         <div class="card border shadow-sm" style="width: 100%; background-color: <?= $background_color ?>;">
-                            <h5 class="card-header text-center">Top Entry #<?= $index; ?></h5>
+                            <h5 class="card-header text-center">Top Entry #<?= $index + 1; ?></h5>
                             <img src="<?= (!empty($entry['images']) ? '../uploads/recipes/' . $entry['images'] : '../assets/images/default_recipe.png'); ?>" class="card-img-top" alt="Recipe Image" style="height: 150px; object-fit: cover;">
                             <div class="card-body text-center">
                                 <h5 class="card-title"><?= htmlspecialchars($entry['title'] ?? 'No Entry'); ?></h5>
                                 <p class="card-text"><?= htmlspecialchars(substr($entry['description'] ?? 'No description available.', 0, 50)) . '...'; ?></p>
+                                <p class="card-text"><?= '<b>Submitted by:</b> ' . htmlspecialchars($entry['username'] ?? 'No user.'); ?></p>
                                 <p class="text-muted">Votes: <?= $entry['vote_count'] ?? 0; ?></p>
                             </div>
                         </div>
