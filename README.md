@@ -46,7 +46,7 @@ For XAMPP local hosting:
 - Type in "localhost/serverside_asg/index" in the browser  
 
 **Usage**  
-1. Login 
+1. Login  
 Users can sign in using their email and password.  
 
 2. Password Reset  
