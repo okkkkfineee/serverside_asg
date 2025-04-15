@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 15, 2025 at 06:06 AM
+-- Generation Time: Apr 15, 2025 at 08:53 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -340,8 +340,8 @@ CREATE TABLE `meal_plans` (
   `plan_id` int(10) NOT NULL,
   `recipe_id` int(10) NOT NULL,
   `user_id` int(10) NOT NULL,
-  `meal_category` varchar(50) NOT NULL,
-  `plan_name` varchar(30) NOT NULL,
+  `meal_category` varchar(10) NOT NULL,
+  `plan_name` varchar(50) NOT NULL,
   `created_date` date NOT NULL,
   `meal_time` int(2) NOT NULL,
   `meal_date` date NOT NULL,
@@ -356,7 +356,10 @@ INSERT INTO `meal_plans` (`plan_id`, `recipe_id`, `user_id`, `meal_category`, `p
 (1, 14, 8, 'Lunch', 'Chinese Food Time', '2025-04-15', 690, '2025-04-16', '2025-04-15 03:58:17'),
 (2, 11, 8, 'Dinner', 'Japan Time', '2025-04-15', 1170, '2025-04-17', '2025-04-15 03:58:40'),
 (4, 1, 8, 'Dinner', 'Rice', '2025-04-15', 1140, '2025-04-18', '2025-04-15 04:02:20'),
-(5, 4, 8, 'Lunch', 'lunch', '2025-04-15', 810, '2025-04-18', '2025-04-15 04:02:32');
+(5, 4, 8, 'Lunch', 'lunch', '2025-04-15', 810, '2025-04-18', '2025-04-15 04:02:32'),
+(45, 14, 8, 'Breakfast', 'Celebrate', '2025-04-15', 540, '2025-04-15', '2025-04-15 06:50:47'),
+(46, 3, 8, 'Lunch', 'japanese style', '2025-04-15', 840, '2025-04-20', '2025-04-15 06:51:12'),
+(47, 4, 8, 'Lunch', 'Chinese Cuisine', '2025-04-15', 750, '2025-04-19', '2025-04-15 06:51:33');
 
 -- --------------------------------------------------------
 
@@ -682,7 +685,7 @@ ALTER TABLE `ingredients`
 -- AUTO_INCREMENT for table `meal_plans`
 --
 ALTER TABLE `meal_plans`
-  MODIFY `plan_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `plan_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT for table `recipe`
