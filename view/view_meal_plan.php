@@ -16,7 +16,13 @@ if (isset($_GET['plan_id'])) {
         $plan = $mealPlan->fetch_assoc();
         
         // Get recipe details
-        $recipe = $recipeController->getRecipe($plan['recipe_id']);
+        $recipe = $recipeController->getRecipeInfo($plan['recipe_id']);
+        
+        // Get ingredients for the recipe
+        $ingredients = $recipeController->getIngredients($plan['recipe_id']);
+        
+        // Get steps for the recipe
+        $steps = $recipeController->getSteps($plan['recipe_id']);
         
         // Check if user is authorized to view/edit this meal plan
         if ($plan['user_id'] != $_SESSION['user_id']) {
@@ -50,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Refresh meal plan data
                 $mealPlan = $mealPlanningController->getMealPlanById($plan_id);
                 $plan = $mealPlan->fetch_assoc();
-                $recipe = $recipeController->getRecipe($plan['recipe_id']);
+                $recipe = $recipeController->getRecipeInfo($plan['recipe_id']);
             } else {
                 $error_message = "Failed to update meal plan. Please try again.";
             }
@@ -122,35 +128,73 @@ $allRecipes = $recipeController->getAllRecipes();
                                 <p><strong>Meal Date:</strong> <?php echo date('F j, Y', strtotime($plan['meal_date'])); ?></p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Created:</strong> <?php echo date('F j, Y h:i A', strtotime($plan['created_date'])); ?></p>
-                                <p><strong>Last Updated:</strong> <?php echo isset($plan['updated_at']) ? date('F j, Y h:i A', strtotime($plan['updated_at'])) : 'Not updated'; ?></p>
+                                <p><strong>Created:</strong> <?php 
+                                    $created_date = new DateTime($plan['created_date']);
+                                    echo $created_date->format('F j, Y h:i A'); 
+                                ?></p>
+                                <p><strong>Last Updated:</strong> <?php 
+                                    if (isset($plan['updated_at']) && $plan['updated_at']) {
+                                        $updated_date = new DateTime($plan['updated_at']);
+                                        echo $updated_date->format('F j, Y h:i:s A');
+                                    } else {
+                                        echo 'Not updated';
+                                    }
+                                ?></p>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="card">
+                <div class="card mb-4">
                     <div class="card-header">
-                        <h4>Recipe</h4>
+                        <h5 class="card-title mb-0">Recipe Details</h5>
                     </div>
                     <div class="card-body">
                         <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
-                        <p class="card-text">
-                            <?php echo nl2br(htmlspecialchars($recipe['description'])); ?>
-                        </p>
+                        <p class="card-text"><?php echo nl2br(htmlspecialchars($recipe['description'])); ?></p>
                         
-                        <h5 class="mt-4">Ingredients</h5>
-                        <ul>
-                            <?php foreach ($recipe['ingredients'] as $ingredient): ?>
-                                <li><?php echo htmlspecialchars($ingredient); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
+                        <div class="recipe-meta">
+                            <span class="badge bg-primary"><?php echo htmlspecialchars($recipe['cuisine']); ?></span>
+                            <span class="badge bg-info">Difficulty: <?php echo str_repeat('★', $recipe['difficulty']); ?></span>
+                            <span class="badge bg-secondary">Cooking Time: <?php echo $recipe['cooking_time']; ?> minutes</span>
+                        </div>
+                        <br>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Ingredients</h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if ($ingredients && $ingredients->num_rows > 0): ?>
+                                    <ul class="list-group">
+                                        <?php while ($ingredient = $ingredients->fetch_assoc()): ?>
+                                            <li class="list-group-item">
+                                                <?php echo htmlspecialchars($ingredient['material']); ?>
+                                            </li>
+                                        <?php endwhile; ?>
+                                    </ul>
+                                <?php else: ?>
+                                    <p class="text-muted">No ingredients listed.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                         
-                        <h5 class="mt-4">Instructions</h5>
-                        <ol>
-                            <?php foreach ($recipe['steps'] as $step): ?>
-                                <li><?php echo htmlspecialchars($step); ?></li>
-                            <?php endforeach; ?>
-                        </ol>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Instructions</h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if ($steps && $steps->num_rows > 0): ?>
+                                    <ol class="list-group list-group-numbered">
+                                        <?php while ($step = $steps->fetch_assoc()): ?>
+                                            <li class="list-group-item">
+                                                <?php echo htmlspecialchars($step['instruction']); ?>
+                                            </li>
+                                        <?php endwhile; ?>
+                                    </ol>
+                                <?php else: ?>
+                                    <p class="text-muted">No instructions available.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -205,15 +249,33 @@ $allRecipes = $recipeController->getAllRecipes();
                                 $timeRanges = [
                                     'Breakfast' => ['start' => '05:00', 'end' => '11:30'],
                                     'Lunch' => ['start' => '11:30', 'end' => '16:30'],
-                                    'Dinner' => ['start' => '17:00', 'end' => '22:30'],
-                                    'Snacks' => ['start' => '00:00', 'end' => '23:30']
+                                    'Dinner' => ['start' => '17:00', 'end' => '22:30']
                                 ];
                                 
                                 // Get the current category
                                 $currentCategory = $plan['meal_category'];
                                 
-                                // Generate time options for the current category
-                                if (isset($timeRanges[$currentCategory])) {
+                                if ($currentCategory === 'Snacks') {
+                                    // For Snacks, show all times in 30-minute intervals
+                                    for($i = 0; $i < 24; $i++): 
+                                        for($j = 0; $j < 60; $j += 30):
+                                            $timeStr = sprintf("%02d:%02d", $i, $j);
+                                            $period = $i >= 12 ? 'PM' : 'AM';
+                                            $displayHour = $i % 12;
+                                            $displayHour = $displayHour == 0 ? 12 : $displayHour;
+                                            $displayTime = sprintf("%d:%02d %s", $displayHour, $j, $period);
+                                            
+                                            // Check if this is the selected time
+                                            $isSelected = false;
+                                            if (strpos($plan['formatted_time'], $timeStr) !== false) {
+                                                $isSelected = true;
+                                            }
+                                            
+                                            echo "<option value=\"$timeStr\" " . ($isSelected ? 'selected' : '') . ">$displayTime</option>";
+                                        endfor;
+                                    endfor;
+                                } else if (isset($timeRanges[$currentCategory])) {
+                                    // For other categories, use the defined time ranges
                                     $range = $timeRanges[$currentCategory];
                                     
                                     list($startHour, $startMin) = explode(':', $range['start']);
@@ -241,25 +303,6 @@ $allRecipes = $recipeController->getAllRecipes();
                                         
                                         echo "<option value=\"$timeStr\" " . ($isSelected ? 'selected' : '') . ">$displayTime</option>";
                                     }
-                                } else {
-                                    // Fallback for Snacks or any other category
-                                    for($i = 0; $i < 24; $i++): 
-                                        for($j = 0; $j < 60; $j += 30):
-                                            $timeStr = sprintf("%02d:%02d", $i, $j);
-                                            $period = $i >= 12 ? 'PM' : 'AM';
-                                            $displayHour = $i % 12;
-                                            $displayHour = $displayHour == 0 ? 12 : $displayHour;
-                                            $displayTime = sprintf("%d:%02d %s", $displayHour, $j, $period);
-                                            
-                                            // Check if this is the selected time
-                                            $isSelected = false;
-                                            if (strpos($plan['formatted_time'], $timeStr) !== false) {
-                                                $isSelected = true;
-                                            }
-                                            
-                                            echo "<option value=\"$timeStr\" " . ($isSelected ? 'selected' : '') . ">$displayTime</option>";
-                                        endfor;
-                                    endfor;
                                 }
                                 ?>
                             </select>
@@ -318,87 +361,90 @@ $allRecipes = $recipeController->getAllRecipes();
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Function to update time options based on selected category
-        function updateTimeBasedOnCategory() {
-            const category = document.getElementById('meal_category').value;
-            const timeSelect = document.getElementById('meal_time');
-            
-            // Define time ranges for each category
-            const timeRanges = {
-                'Breakfast': { start: '05:00', end: '11:30' },
-                'Lunch': { start: '11:30', end: '16:30' },
-                'Dinner': { start: '17:00', end: '22:30' },
-                'Snacks': { start: '00:00', end: '23:30' }
-            };
-            
-            // Clear existing options
-            timeSelect.innerHTML = '';
-            
-            if (category && timeRanges[category]) {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set minimum date to today
+            const mealDateInput = document.getElementById('meal_date');
+            const today = new Date().toISOString().split('T')[0];
+            mealDateInput.min = today;
+
+            // Handle form submission
+            const form = document.getElementById('updateMealPlanForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                
+                fetch('controller/meal_planning_controller.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.href = 'meal_planner.php';
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the meal plan.');
+                });
+            });
+
+            // Update time options based on category
+            function updateTimeBasedOnCategory() {
+                const category = document.getElementById('meal_category').value;
+                const timeSelect = document.getElementById('meal_time');
+                const currentTime = timeSelect.value;
+                
+                // Clear existing options
+                timeSelect.innerHTML = '';
+                
+                // Define time ranges for each category
+                const timeRanges = {
+                    'Breakfast': { start: '06:00', end: '11:00' },
+                    'Lunch': { start: '11:00', end: '15:00' },
+                    'Dinner': { start: '17:00', end: '22:00' },
+                    'Snacks': { start: '08:00', end: '22:00' }
+                };
+                
                 const range = timeRanges[category];
+                if (!range) return;
                 
-                // Parse start and end times
-                const [startHour, startMin] = range.start.split(':').map(Number);
-                const [endHour, endMin] = range.end.split(':').map(Number);
+                // Generate time options in 30-minute intervals
+                const [startHour, startMinute] = range.start.split(':').map(Number);
+                const [endHour, endMinute] = range.end.split(':').map(Number);
                 
-                // Convert to minutes for easier calculation
-                const startTime = (startHour * 60) + startMin;
-                const endTime = (endHour * 60) + endMin;
+                let currentHour = startHour;
+                let currentMinute = startMinute;
                 
-                // Generate options in 30-minute intervals
-                for (let time = startTime; time <= endTime; time += 30) {
-                    const hours = Math.floor(time / 60);
-                    const minutes = time % 60;
-                    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                    
-                    // Format for display
-                    const displayHour = hours % 12 || 12;
-                    const period = hours >= 12 ? 'PM' : 'AM';
-                    const displayTime = `${displayHour}:${String(minutes).padStart(2, '0')} ${period}`;
-                    
+                while (currentHour < endHour || (currentHour === endHour && currentMinute <= endMinute)) {
+                    const timeString = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
                     const option = document.createElement('option');
-                    option.value = timeStr;
-                    option.textContent = displayTime;
+                    option.value = timeString;
+                    option.textContent = timeString;
                     
-                    // Check if this is the current selected time
-                    const currentTime = '<?php echo $plan['formatted_time']; ?>';
-                    if (currentTime.includes(timeStr)) {
+                    if (timeString === currentTime) {
                         option.selected = true;
                     }
                     
                     timeSelect.appendChild(option);
-                }
-            } else if (category === 'Snacks') {
-                // For Snacks, show all times in 30-minute intervals
-                for (let i = 0; i < 24; i++) {
-                    for (let j = 0; j < 60; j += 30) {
-                        const timeStr = `${String(i).padStart(2, '0')}:${String(j).padStart(2, '0')}`;
-                        const displayHour = i % 12 || 12;
-                        const period = i >= 12 ? 'PM' : 'AM';
-                        const displayTime = `${displayHour}:${String(j).padStart(2, '0')} ${period}`;
-                        
-                        const option = document.createElement('option');
-                        option.value = timeStr;
-                        option.textContent = displayTime;
-                        
-                        // Check if this is the current selected time
-                        const currentTime = '<?php echo $plan['formatted_time']; ?>';
-                        if (currentTime.includes(timeStr)) {
-                            option.selected = true;
-                        }
-                        
-                        timeSelect.appendChild(option);
+                    
+                    currentMinute += 30;
+                    if (currentMinute >= 60) {
+                        currentHour += Math.floor(currentMinute / 60);
+                        currentMinute %= 60;
                     }
                 }
             }
-        }
-        
-        // Add event listener to update time options when category changes
-        document.getElementById('meal_category').addEventListener('change', updateTimeBasedOnCategory);
-        
-        // Initialize time options on page load
-        document.addEventListener('DOMContentLoaded', function() {
+
+            // Initialize time options on page load
             updateTimeBasedOnCategory();
+            
+            // Update time options when category changes
+            document.getElementById('meal_category').addEventListener('change', updateTimeBasedOnCategory);
         });
     </script>
 </body>

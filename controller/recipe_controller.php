@@ -4,9 +4,11 @@ require_once '../model/recipe_model.php';
 
 class RecipeController {
     private $recipeModel;
+    private $db;
 
     public function __construct($db) {
         $this->recipeModel = new Recipe($db);
+        $this->db = $db;
     }
 
     public function getRecipe($recipe_id) {
@@ -43,6 +45,22 @@ class RecipeController {
 
     public function getMatchedRecipes($comp_theme, $user_id) {
         return $this->recipeModel->getMatchedRecipes($comp_theme, $user_id);
+    }
+
+    public function getIngredients($recipe_id) {
+        $sql = "SELECT * FROM ingredients WHERE recipe_id = ? ORDER BY ingredient_num ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $recipe_id);
+        $stmt->execute();
+        return $stmt->get_result();
+    }
+
+    public function getSteps($recipe_id) {
+        $sql = "SELECT * FROM steps WHERE recipe_id = ? ORDER BY step_number ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $recipe_id);
+        $stmt->execute();
+        return $stmt->get_result();
     }
 }
 ?>

@@ -120,6 +120,37 @@ if (isset($_SESSION['error_message'])) {
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: opacity 0.3s ease;
         }
+        .meal-plans-sidebar {
+            width: 300px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: calc(100vh - 100px);
+            position: fixed;
+            right: 20px;
+            top: 80px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meal-plans-sidebar h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.2em;
+        }
+
+        .meal-plans-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(100vh - 180px);
+            padding-right: 10px;
+        }
+
+        .meal-plan-item {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
     </style>
     <script>
         let tooltip = null;
@@ -552,6 +583,24 @@ if (isset($_SESSION['error_message'])) {
 
             // Initialize time validation on page load
             updateTimeBasedOnCategory();
+
+            // Set minimum date for meal_date input to today
+            const mealDateInput = document.getElementById('meal_date');
+            const today = new Date().toISOString().split('T')[0];
+            mealDateInput.min = today;
+
+            // Form submission handling
+            document.getElementById('mealPlanForm').addEventListener('submit', function(e) {
+                const mealDate = new Date(document.getElementById('meal_date').value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (mealDate < today) {
+                    e.preventDefault();
+                    alert('Cannot create meal plans for past dates.');
+                    return false;
+                }
+            });
         });
     </script>
 </head>
