@@ -349,7 +349,7 @@ class Recipe {
         return true;
     }
 
-    public function getMatchedRecipes($comp_theme) {
+    public function getMatchedRecipes($comp_theme, $user_id) {
         $cuisine = ['Any', 'Chinese', 'Indian', 'Japanese', 'Malay', 'Thai', 'Western'];
         $cooking_time = ['Under 15 Minutes', 'Under 30 Minutes', 'Under 1 Hour', 'Slow Cooked'];
         $difficulty = [
@@ -362,32 +362,37 @@ class Recipe {
     
         if (in_array($comp_theme, $cuisine)) {
             if ($comp_theme === 'Any') {
-                $sql = "SELECT * FROM recipe";
+                $sql = "SELECT * FROM recipe WHERE user_id = ?";
                 $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("i", $user_id);
             } else {
-                $sql = "SELECT * FROM recipe WHERE cuisine = ?";
+                $sql = "SELECT * FROM recipe WHERE cuisine = ? AND user_id = ?";
                 $stmt = $this->conn->prepare($sql);
-                $stmt->bind_param("s", $comp_theme);
+                $stmt->bind_param("si", $comp_theme, $user_id);
             }
         } elseif (in_array($comp_theme, $cooking_time)) {
             if ($comp_theme === 'Under 15 Minutes') {
-                $sql = "SELECT * FROM recipe WHERE cooking_time < 15";
+                $sql = "SELECT * FROM recipe WHERE cooking_time < 15 AND user_id = ?";
                 $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("i", $user_id);
             } elseif ($comp_theme === 'Under 30 Minutes') {
-                $sql = "SELECT * FROM recipe WHERE cooking_time < 30";
+                $sql = "SELECT * FROM recipe WHERE cooking_time < 30 AND user_id = ?";
                 $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("i", $user_id);
             } elseif ($comp_theme === 'Under 1 Hour') {
-                $sql = "SELECT * FROM recipe WHERE cooking_time < 60";
+                $sql = "SELECT * FROM recipe WHERE cooking_time < 60 AND user_id = ?";
                 $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("i", $user_id);
             } elseif ($comp_theme === 'Slow Cooked') {
-                $sql = "SELECT * FROM recipe WHERE cooking_time >= 60";
+                $sql = "SELECT * FROM recipe WHERE cooking_time >= 60 AND user_id = ?";
                 $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("i", $user_id);
             }
         } elseif (array_key_exists($comp_theme, $difficulty)) {
             $level = $difficulty[$comp_theme];
-            $sql = "SELECT * FROM recipe WHERE difficulty = ?";
+            $sql = "SELECT * FROM recipe WHERE difficulty = ? AND user_id = ?";
             $stmt = $this->conn->prepare($sql);
-            $stmt->bind_param("i", $level);
+            $stmt->bind_param("ii", $level, $user_id);
         } else {
             return [];
         }

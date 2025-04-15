@@ -57,13 +57,13 @@ $recipes = $recipeController->getAllRecipes();
         <?php
         if (!empty($recipes)) : ?>
             <div class="row mt-4">
-                <?php foreach ($recipes as $recipe) : ?>
+                <?php foreach (array_slice($recipes, 0, 9) as $recipe) : ?>
                     <div class="col-md-4 mb-4">
-                        <div class="card shadow-sm">
-                            <img src="../uploads/recipes/<?= $recipe['images'] ?>" class="card-img-top" alt="<?= $recipe['title'] ?>">
+                        <div class="card shadow-sm" style="width: 100%; height: 400px;">
+                            <img src="../uploads/recipes/<?= $recipe['images'] ?>" class="card-img-top" alt="<?= $recipe['title'] ?>" style="width: 100%; height: 200px; object-fit: cover;">
                             <div class="card-body">
                                 <h5 class="card-title"><?= $recipe['title'] ?></h5>
-                                <p class="card-text"><?= $recipe['description'] ?></p>
+                                <p class="card-text"><?php echo htmlspecialchars(substr($recipe['description'], 0, 80)) . '...'; ?></p>
                                 <a href="view_recipe?recipe_id=<?= $recipe['recipe_id'] ?>" class="btn btn-primary">View</a>
                             </div>
                         </div>

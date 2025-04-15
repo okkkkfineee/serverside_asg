@@ -91,11 +91,7 @@ class Competition {
         }
         $stmt->execute();
         $result = $stmt->get_result();
-        if ($result->num_rows === 0) {
-            return [['comp_title' => 'No competition available', 'comp_desc' => '']];
-        } else {
-            return $result->fetch_all(MYSQLI_ASSOC);
-        }
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
     
 
@@ -292,7 +288,11 @@ class Competition {
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
-        return $result->num_rows > 0;
+        if ($result->num_rows > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function submitEntry($comp_id, $user_id, $selected_recipe_id){
