@@ -42,7 +42,36 @@ class ForumCategoryModel {
             return "Error creating category: " . $stmt->error;
         }
     }
-}
+
+    public function deleteCategory($category_id) {
+        $sql = "DELETE FROM forum_category WHERE category_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) {
+            return "Error preparing statement: " . $this->conn->error;
+        }
+        $stmt->bind_param("i", $category_id);
+        return $stmt->execute() ? true : "Error deleting category: " . $stmt->error;
+    }
+
+    public function editCategory($category_id, $category_name, $category_description) {
+        if (empty($category_name) || empty($category_description)) {
+            return "Name and description cannot be empty.";
+        }
+
+        $sql = "UPDATE forum_category SET name = ?, description = ? WHERE category_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) return "Error preparing statement: " . $this->conn->error;
+
+        $stmt->bind_param("ssi", $category_name, $category_description, $category_id);
+        $result = $stmt->execute();
+        
+        if (!$result) {
+            error_log("SQL Error: " . $stmt->error);
+        }
+        
+        return $result ? true : "Error updating category: " . $stmt->error;
+    }
+}   
 
 // Forum Thread Model
 class ForumThreadModel {
@@ -186,6 +215,53 @@ class ForumPostModel {
         } else {
             return ["error" => $result];
         }
+    }
+}
+
+class ForumRatingModel {
+    private $conn;
+
+    public function __construct($db) {
+        $this->conn = $db;
+    }
+
+    // Rate a thread
+    public function rateThread($thread_id, $user_id, $rating, $category_id) {
+        // Check if the user has already rated the thread
+        if ($this->getUserRating($thread_id, $user_id, $category_id)) {
+            return ["error" => "You have already rated this thread."];
+        }
+
+        // Insert new rating
+        $sql = "INSERT INTO forum_thread_rating (category_id, thread_id, user_id, rating) VALUES (?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iiii", $category_id, $thread_id, $user_id, $rating);
+        $stmt->execute();
+
+        // Fetch the updated average rating
+        return (float) $this->getAverageRating($thread_id, $category_id);
+    }
+
+    // Get average rating for a thread
+    public function getAverageRating($thread_id, $category_id) {
+        $sql = "SELECT AVG(rating) as average_rating FROM forum_thread_rating WHERE thread_id = ? AND category_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $thread_id, $category_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        return $row['average_rating'] ?: 0; // Return 0 if no ratings
+    }
+
+    // Get user's rating for a specific thread
+    public function getUserRating($thread_id, $user_id, $category_id) {
+        $sql = "SELECT rating FROM forum_thread_rating WHERE thread_id = ? AND user_id = ? AND category_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iii", $thread_id, $user_id, $category_id);
+        $stmt->execute();
+        $stmt->bind_result($rating);
+        $stmt->fetch();
+        return $rating ?? null; // Returns the rating or null if not rated
     }
 }
 ?>
