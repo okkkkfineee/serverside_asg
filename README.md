@@ -6,23 +6,25 @@ This Recipe Website provide a platform for user to explore and share different r
 - Register and Login  
 - Add, Edit and Delete Recipe  
 - Join competitions and vote for favourites  
-- Create custom meal plans  
+- Create own custom meal plans  
 - Start or join a discussion  
 
-**Superadmin Special Functionality**:  
+**Superadmin Role Special Functionality**:  
 - View user list  
 - Make an user as admin  
 - Remove any user  
 - Host, Edit and Delete Competition  
-- Remove any recipe  
+- Remove any recipe
+- Create and Delete Forums Categories  
 
-**Admin Special Functionality**:  
+**Admin Role Special Functionality**:  
 - View user list  
 - Remove moderator and user  
 - Host, Edit and Delete Competition  
-- Remove any recipe  
+- Remove any recipe
+- Create and Delete Forums Categories  
 
-**Moderator Special Functionality**:  
+**Moderator Role Special Functionality**:  
 - Host, Edit and Delete Competition  
 
 **Requirements**  
@@ -64,10 +66,11 @@ Users can explore competition hosted, view and join competitions as well as vote
 6. Meal Planners Page  
 Users can add, edit, and delete own custom meal plans.  
 
-7. Forums Page  
+7. Forums Page
+Superadmin and admin can create or delete forums category.  
 Users can have discussion with other user.  
 
-8. Admin Panel  
+9. Admin Panel  
 Admin can view user list, remove any recipe, and manage competitions.  
 
 **Directory Structure**  
