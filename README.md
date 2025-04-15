@@ -93,3 +93,4 @@ MySQL for database management
 
 **Notes**  
 - In order for the "forget_password" module to work, please manually add Gmail and app password in the .env file under /src folder.  
+- Dummy Data Login Credential - please refer in /assest/iamges/login_credentials.png

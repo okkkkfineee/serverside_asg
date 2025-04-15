@@ -9,7 +9,7 @@ require '../controller/comp_controller.php';
 
 $compController = new CompetitionController($conn);
 
-if (isset($_SESSION['id'])) {
+if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
     $checkEntry = $compController->checkEntry($_GET['comp_id'], $user_id);
 }
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php if (strtotime(date('Y-m-d')) >= strtotime($comp['end_date'] . ' + 11 days')) : ?>
                     <a href="#announcement" class="btn btn-primary" style="width: 200px;" id="announcement-btn">Winner Announcement</a>
                 <?php elseif (strtotime($comp['end_date']) > time()) : ?>
-                    <?php if ($checkEntry) : ?>
+                    <?php if (!empty($checkEntry) && $checkEntry === true) : ?>
                         <a href="#" class="btn btn-success disabled" style="width: 200px;" id="entries-btn" aria-disabled="true">Joined</a>
                     <?php else : ?>
                         <a href="competition_entry?comp_id=<?php echo $_GET['comp_id']; ?>" class="btn btn-success" style="width: 200px;" id="entries-btn">Join Competition</a>
@@ -261,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endfor; ?>
             </div>
 
-            <div class="row justify-content-center mt-4">
+            <div class="row justify-content-center mt-4 mb-4">
                 <?php for ($index = 0; $index < 2; $index++) : ?>
                     <?php
                         $entry = $top_entries[$index + 3] ?? null;
@@ -273,6 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="card-body text-center">
                                 <h5 class="card-title"><?= htmlspecialchars($entry['title'] ?? 'No Entry'); ?></h5>
                                 <p class="card-text"><?= htmlspecialchars(substr($entry['description'] ?? 'No description available.', 0, 50)) . '...'; ?></p>
+                                <p class="card-text"><?= '<b>Submitted by:</b> ' . htmlspecialchars($entry['username'] ?? 'No user.'); ?></p>
                                 <p class="text-muted">Votes: <?= $entry['vote_count'] ?? 0; ?></p>
                             </div>
                         </div>

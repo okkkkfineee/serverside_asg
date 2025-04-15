@@ -41,8 +41,8 @@ class RecipeController {
         return $this->recipeModel->deleteRecipe($recipe_id);
     }
 
-    public function getMatchedRecipes($comp_theme) {
-        return $this->recipeModel->getMatchedRecipes($comp_theme);
+    public function getMatchedRecipes($comp_theme, $user_id) {
+        return $this->recipeModel->getMatchedRecipes($comp_theme, $user_id);
     }
 }
 ?>

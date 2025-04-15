@@ -10,7 +10,7 @@ $compController = new CompetitionController($conn);
 
 $comp = $compController->getComp($_GET['comp_id']);
 $checkEntry = $compController->checkEntry($_GET['comp_id'], $_SESSION['user_id']);
-$recipes = $recipeController->getMatchedRecipes($comp['comp_theme']);
+$recipes = $recipeController->getMatchedRecipes($comp['comp_theme'], $_SESSION['user_id']);
 
 if (strtotime($comp['end_date']) < time()) {
     echo "<script>alert('This competition is no longer accepting entries. \\nThank you for your interest!');
