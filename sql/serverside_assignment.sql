@@ -259,6 +259,54 @@ INSERT INTO `user` (`user_id`, `username`, `email`, `password`, `roles`, `bio`, 
 (3, 'Superadmin', 'superadmin@test.com', '$2y$10$DLhFf/BWaIorhckMXprYhOQnb8FCO9y3Gf66v50/.bs89gVqXK9Oi', 'Superadmin', 'No bio yet.', '2025-04-08 10:57:11'),
 (4, 'okfine', 'okfine0601@gmail.com', '$2y$10$JhGDRK7xSfHU3Sg/eFGP/O5SSQoXTmhG1.4uQVv6gYKK5K.PMZTOC', 'User', 'No bio yet.', '2025-04-11 18:51:49');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `forum_category`
+--
+
+CREATE TABLE `forum_category` (
+  `category_id` int(10) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  PRIMARY KEY (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+--
+-- Table structure for table `forum_thread`
+--
+
+CREATE TABLE `forum_thread` (
+  `thread_id` int(10) NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) NOT NULL,
+  `category_id` int(10) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `content` text NOT NULL,
+  `created_time` datetime NOT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`thread_id`),
+  KEY `user_id` (`user_id`),
+  KEY `category_id` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+--
+-- Table structure for table `forum_post`
+--
+
+CREATE TABLE `forum_post` (
+  `post_id` int(10) NOT NULL AUTO_INCREMENT,
+  `thread_id` int(10) NOT NULL,
+  `user_id` int(10) NOT NULL,
+  `content` text NOT NULL,
+  `created_time` datetime NOT NULL,
+  PRIMARY KEY (`post_id`),
+  KEY `thread_id` (`thread_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- -----------------------------------------------------------
 --
 -- Indexes for dumped tables
 --
@@ -452,6 +500,15 @@ ALTER TABLE `ingredients`
 ALTER TABLE `steps`
   ADD CONSTRAINT `recipe_step` FOREIGN KEY (`recipe_id`) REFERENCES `recipe` (`recipe_id`) ON DELETE CASCADE ON UPDATE NO ACTION;
 COMMIT;
+
+-- Constraints for forum tables
+ALTER TABLE `forum_thread`
+  ADD CONSTRAINT `forum_thread_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `forum_thread_category` FOREIGN KEY (`category_id`) REFERENCES `forum_category` (`category_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `forum_post`
+  ADD CONSTRAINT `forum_post_thread` FOREIGN KEY (`thread_id`) REFERENCES `forum_thread` (`thread_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `forum_post_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
