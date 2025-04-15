@@ -7,6 +7,9 @@ require '../controller/user_controller.php';
 $forumController = new ForumController($conn);
 $userController = new UserController($conn);
 
+// Get the current user ID from session
+$currentUserId = $_SESSION['user_id'] ?? null;
+
 $categoryId = $_GET['id'] ?? null;
 $category = $forumController->getCategoryById($categoryId);
 
@@ -17,7 +20,9 @@ if (!$category) {
 
 // Fetch threads for the given category
 $threads = $forumController->getThreadsByCategory($categoryId);
-$userDetail = $forumController->getThreadDetails($categoryId);
+
+// Check for a message in the URL parameters
+$message = $_GET['message'] ?? null;
 ?>
 
 <!DOCTYPE html>
@@ -40,6 +45,7 @@ $userDetail = $forumController->getThreadDetails($categoryId);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       padding: 20px;
       margin-bottom: 20px;
+      position: relative; /* Enable positioning for rating */
     }
     .thread-title {
       font-size: 24px;
@@ -54,11 +60,15 @@ $userDetail = $forumController->getThreadDetails($categoryId);
       padding-left: 10px;
       color: #495057;
     }
-    .reply-button {
-      cursor: pointer;
-    }
     .reply-actions {
       margin-top: 10px;
+    }
+    .rating {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-weight: bold;
+      color: #007bff;
     }
   </style>
 </head>
@@ -68,46 +78,77 @@ $userDetail = $forumController->getThreadDetails($categoryId);
   <div class="container mt-5">
     <h2 class="mb-4"><?= htmlspecialchars($category['name']) ?></h2>
     <p class="lead"><?= htmlspecialchars($category['description']) ?></p>
-    <a href="create_thread_form.php?category_id=<?= $categoryId ?>" class="btn btn-success mb-3">Create New Thread</a>
+    <a href="create_thread_form.php?category_id=<?= htmlspecialchars($categoryId) ?>" class="btn btn-success mb-3">Create New Thread</a>
 
     <?php if (empty($threads)): ?>
       <div class="alert alert-info">No threads yet. Be the first to post!</div>
     <?php else: ?>
         <?php foreach ($threads as $thread): ?>
+            <?php 
+              // Get thread creator details to display username
+              $threadCreatorId = $forumController->getThreadUser($thread['thread_id']);
+              // Get username from user controller
+              $threadCreator = $userController->getUserInfo($threadCreatorId);
+              // Get average rating for the thread
+              $averageRating = $forumController->getAverageRating($thread['thread_id'], $thread['category_id']);
+            ?>
             <div class="thread-box">
+                <div class="rating">Rating: <?= number_format($averageRating, 1) ?> / 5</div>
                 <div class="thread-title" onclick="toggleReplies(<?= $thread['thread_id'] ?>)">
                     <?= htmlspecialchars($thread['title']) ?>
                     <i class="fas fa-chevron-down toggle-icon" id="icon-<?= $thread['thread_id'] ?>"></i>
                 </div>
-                <p class="text-muted">Created by: <strong><?= htmlspecialchars($userDetail['username'] ?? 'Unknown') ?></strong> at <?= htmlspecialchars($thread['created_time']) ?></p>
+                <p class="text-muted">Created by: <strong><?= htmlspecialchars($threadCreator['username'] ?? 'Unknown') ?></strong> at <?= htmlspecialchars($thread['created_time']) ?></p>
                 <div class="thread-content"><?= htmlspecialchars($thread['content']) ?></div>
 
-                <div id="replies-<?= $thread['thread_id'] ?>" class="replies" style="display:none;">
+                <div id="replies-<?= $thread['thread_id'] ?>" class="replies d-none">
                     <?php $posts = $forumController->getPostsByThread($thread['thread_id']); ?>
                     <?php foreach ($posts as $post): ?>
-                        <p><strong><?= htmlspecialchars($post['user_id']) ?>:</strong> <?= htmlspecialchars($post['content']) ?></p>
+                        <?php 
+                            // Get post author's username
+                            $postAuthor = $userController->getUserInfo($post['user_id']);
+                        ?>
+                        <p><strong><?= htmlspecialchars($postAuthor['username'] ?? 'Unknown') ?>:</strong> <?= htmlspecialchars($post['content']) ?></p>
                     <?php endforeach; ?>
                 </div>
 
-                <div class="thread-actions reply-actions">
-                    <a href="edit_thread_form.php?id=<?= $thread['thread_id'] ?>" class="btn btn-warning btn-sm">Edit</a>
-                    <a href="delete_thread.php?id=<?= $thread['thread_id'] ?>&category_id=<?= $categoryId ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this thread?');">Delete</a>
-                    <a href="thread.php?id=<?= $thread['thread_id'] ?>" class="btn btn-primary btn-sm">Create Post (Reply)</a>
+                <div class="thread-actions reply-actions d-flex align-items-center mt-3">
+                    <div class="me-2">
+                        <!-- if the current user is the thread creator or an admin, show edit and delete buttons -->
+                        <?php if ($currentUserId === $threadCreatorId || $userController->isSuperadmin() || $userController->isAdmin() || $userController->isMod()): ?>
+                            <a href="edit_thread_form.php?id=<?= $thread['thread_id'] ?>" class="btn btn-warning btn-sm">Edit</a>
+                            <a href="delete_thread.php?id=<?= $thread['thread_id'] ?>&category_id=<?= $categoryId ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this thread?');">Delete</a>
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <a href="thread.php?id=<?= $thread['thread_id'] ?>" class="btn btn-primary btn-sm me-2">Create Post (Reply)</a>
+                        <?php if ($currentUserId !== $threadCreatorId): ?>
+                            <a href="rating_form.php?thread_id=<?= $thread['thread_id'] ?>" class="btn btn-secondary btn-sm">Rate this Thread</a> <!-- Rating Button -->
+                        <?php else: ?>
+                            <span class="text-muted btn btn-secondary btn-sm" disabled>Cannot Rate Your Own Thread</span>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         <?php endforeach; ?>
     <?php endif; ?>
   </div>
 
+  <?php if ($message): ?>
+    <script>
+        alert("<?= htmlspecialchars($message) ?>");
+    </script>
+  <?php endif; ?>
+
   <script>
     function toggleReplies(threadId) {
-        const repliesDiv = document.getElementById(`replies-${threadId}`);
-        const icon = document.getElementById(`icon-${threadId}`);
-        const isVisible = repliesDiv.style.display === "block";
+      const repliesDiv = document.getElementById(`replies-${threadId}`);
+      const icon = document.getElementById(`icon-${threadId}`);
 
-        repliesDiv.style.display = isVisible ? "none" : "block";
-        icon.classList.toggle("fa-chevron-down", isVisible);
-        icon.classList.toggle("fa-chevron-up", !isVisible);
+      // Toggle visibility using classList
+      repliesDiv.classList.toggle("d-none"); 
+      icon.classList.toggle("fa-chevron-down");
+      icon.classList.toggle("fa-chevron-up");
     }
   </script>
 

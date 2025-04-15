@@ -180,7 +180,16 @@ CREATE TABLE `forum_category` (
 --
 
 INSERT INTO `forum_category` (`category_id`, `name`, `description`) VALUES
-(1, 'Chinese Food Forums', 'Lets Discuss Chinese Foods here. Share your thoughts!');
+(1, 'Chinese Food Forums', 'Let’s discuss Chinese foods here. Share your thoughts!'),
+(2, 'Italian Cuisine', 'A place to talk about pasta, pizza, and more!'),
+(3, 'Mexican Flavors', 'Share your love for tacos, burritos, and spicy dishes.'),
+(4, 'Indian Spices', 'Explore curries, naan, and Indian culinary traditions.'),
+(5, 'Baking Enthusiasts', 'Discuss cakes, cookies, and all things baked.'),
+(6, 'Vegan Vibes', 'Share plant-based recipes and tips.'),
+(7, 'BBQ Grill Masters', 'Talk about grilling techniques and smoky flavors.'),
+(8, 'Sushi Lovers', 'Dive into the world of sushi and Japanese cuisine.'),
+(9, 'Dessert Delights', 'For those with a sweet tooth—share your faves!'),
+(10, 'Coffee & Tea Corner', 'Discuss brews, beans, and steeping techniques.');
 
 -- --------------------------------------------------------
 
@@ -225,6 +234,28 @@ CREATE TABLE `forum_thread` (
 
 INSERT INTO `forum_thread` (`thread_id`, `user_id`, `category_id`, `title`, `content`, `created_time`, `updated_at`) VALUES
 (1, 1, 1, 'Is Kung Pao Chicken Nice?', 'In my opinion, i think kung pao chicken is nice. Especially the spicy kicks!', '2025-04-15 06:05:12', NULL);
+
+-- ---------------------------------------------------
+
+--
+-- Table structure for table `forum_thread_rating`
+-- 
+
+CREATE TABLE `forum_thread_rating` (
+  `rating_id` INT(10) NOT NULL AUTO_INCREMENT,
+  `category_id` INT(10) NOT NULL,
+  `thread_id` INT(10) NOT NULL,
+  `user_id` INT(10) NOT NULL,
+  `rating` INT(1) NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  PRIMARY KEY (`rating_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 
+-- Dumping data for table `forum_thread_rating`
+--
+
+INSERT INTO `forum_thread_rating` (`rating_id`, `category_id`, `thread_id`, `user_id`, `rating`) VALUES
+(1, 1, 1, 1, 5);
 
 -- --------------------------------------------------------
 
@@ -589,6 +620,13 @@ ALTER TABLE `forum_thread`
   ADD KEY `category_id` (`category_id`);
 
 --
+-- Indexes for table `forum_thread_rating`
+--
+ALTER TABLE `forum_thread_rating`
+  ADD KEY `thread_id` (`thread_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `category_id` (`category_id`);
+--
 -- Indexes for table `ingredients`
 --
 ALTER TABLE `ingredients`
@@ -754,6 +792,11 @@ ALTER TABLE `meal_plans`
 --
 ALTER TABLE `steps`
   ADD CONSTRAINT `recipe_step` FOREIGN KEY (`recipe_id`) REFERENCES `recipe` (`recipe_id`) ON DELETE CASCADE ON UPDATE NO ACTION;
+
+ALTER TABLE `forum_thread_rating` 
+  ADD CONSTRAINT `thread_id` FOREIGN KEY (`thread_id`) REFERENCES `forum_thread` (`thread_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `category_id` FOREIGN KEY (`category_id`) REFERENCES `forum_category` (`category_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -2,13 +2,14 @@
 
 require_once '../model/forum_model.php';
 require_once '../model/user_model.php';
-require_once '../config/db_connection.php'; // Ensure DB is connected
+require_once '../config/db_connection.php'; 
 
 class ForumController {
     private $categoryModel;
     private $threadModel;
     private $postModel;
     private $userModel;
+    private $ratingModel;
     private $conn;
 
     public function __construct($db) {
@@ -16,6 +17,7 @@ class ForumController {
         $this->categoryModel = new ForumCategoryModel($db);
         $this->threadModel = new ForumThreadModel($db);
         $this->postModel = new ForumPostModel($db);
+        $this->ratingModel = new ForumRatingModel($db);
         $this->userModel = new User($db);
     }
 
@@ -39,16 +41,20 @@ class ForumController {
             case 'createCategoryAction':
                 $this->createCategory($data);
                 break;
+            case 'editCategory':
+                $this->editCategory();
+                break;
+            case 'deleteCategory':
+                $this->deleteCategory($data['category_id']);
+                break;
+            case 'rateThread':
+                $this->rateThread($data);
+                break;
             default:
                 http_response_code(404);
                 echo "Action not found.";
                 break;
         }
-    }
-
-    public function index() {
-        $categories = $this->categoryModel->getAllCategories();
-        include '../view/forums.php';
     }
 
     public function viewCategory($category_id) {
@@ -161,14 +167,67 @@ class ForumController {
         }
     }
 
+    private function deleteCategory($category_id) {
+        $result = $this->categoryModel->deleteCategory($category_id);
+        if ($result) {
+            header("Location: ../view/forums.php");
+            exit;
+        } else {
+            echo "Error deleting category.";
+        }
+    }
+
+    public function editCategory() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $category_id = $_POST['category_id'];
+            $category_name = $_POST['title']; 
+            $category_description = $_POST['content']; 
+
+            // Call the model's editCategory method
+            $result = $this->categoryModel->editCategory($category_id, $category_name, $category_description);
+            
+            // Check the result and redirect or display an error message
+            if ($result === true) {
+                header("Location: ../view/forums.php"); // Redirect to the forums page
+                exit();
+            } else {
+                // Handle error message
+                echo $result; // You might want to handle this more gracefully in production
+            }
+        }
+    }
+
+    public function getAverageRating($thread_id, $category_id) {
+        return $this->ratingModel->getAverageRating($thread_id, $category_id);
+    }
+
     public function getThreadDetails($thread_id) {
         return $this->threadModel->getThreadUserNameByThreadId($thread_id);
     }
     
-    public function getUserById($user_id) {
-        return $this->userModel->getUserById($user_id);
+    public function getThreadUser($thread_id) {
+        $sql = "SELECT user_id FROM forum_thread WHERE thread_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $thread_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        return $row ? $row['user_id'] : null;
     }
 
+    public function getPostUserName($post_id) {
+        $sql = "SELECT u.username 
+                FROM forum_post p
+                JOIN user u ON p.user_id = u.user_id
+                WHERE p.post_id = ?";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $post_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        return $row ? $row['username'] : null;
+    }
     
     public function deleteThread($thread_id) {
         return $this->threadModel->deleteThread($thread_id);
@@ -196,6 +255,51 @@ class ForumController {
 
     public function getPostsByThread($thread_id) {
         return $this->postModel->getPostsByThread($thread_id);
+    }
+
+    // rating thread 
+    public function rateThread($data) {
+        $user_id = isset($data['user_id']) ? (int)$data['user_id'] : null;
+        $thread_id = isset($data['thread_id']) ? (int)$data['thread_id'] : null;
+        $rating = isset($data['rating']) ? (int)$data['rating'] : null;
+        $category_id = isset($data['category_id']) ? (int)$data['category_id'] : null;
+
+        // Validate input
+        if (!$user_id || !$thread_id || $rating === null) {
+            http_response_code(400);
+            echo "Invalid input. Please provide a rating.";
+            exit;
+        }
+
+        // Check if the user has already rated the thread
+        if ($this->getUserRating($thread_id, $user_id,$category_id)) {
+            // Return a JavaScript snippet for alert and redirect
+            echo "<script>
+                    alert('You have already rated this thread. Don\'t rate it again!');
+                    window.location.href = '../view/category_threads.php?id=" . $category_id . "';
+                </script>";
+            exit;
+        }
+
+        // Call the model to rate the thread
+        $result = $this->ratingModel->rateThread($thread_id, $user_id, $rating, $category_id);
+
+        // Handle errors
+        if (isset($result['error'])) {
+            echo "<script>
+                    alert('" . addslashes($result['error']) . "');
+                    window.location.href = '../view/thread.php?id=" . $thread_id . "';
+                </script>";
+            exit;
+        }
+
+        // Redirect back to the category_threads page with a success message
+        header("Location: ../view/category_threads.php?id=" . $category_id . "&message=Thanks for submitting your rating! Your rating is: " . $rating);
+        exit;
+    }
+
+    public function getUserRating($thread_id, $user_id, $category_id) {
+        return $this->ratingModel->getUserRating($thread_id, $user_id, $category_id);
     }
 }
 
