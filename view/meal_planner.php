@@ -120,37 +120,31 @@ if (isset($_SESSION['error_message'])) {
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: opacity 0.3s ease;
         }
-        .meal-plans-sidebar {
-            width: 300px;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            height: calc(100vh - 100px);
-            position: fixed;
-            right: 20px;
-            top: 80px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .meal-plans-sidebar h3 {
-            margin-bottom: 15px;
-            color: #333;
-            font-size: 1.2em;
-        }
 
         .meal-plans-list {
-            flex: 1;
+            max-height: 400px; /* Height for approximately 4 meal plans */
             overflow-y: auto;
-            max-height: calc(100vh - 180px);
             padding-right: 10px;
         }
 
-        .meal-plan-item {
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 15px;
+        /* Customize scrollbar for better appearance */
+        .meal-plans-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .meal-plans-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .meal-plans-list::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .meal-plans-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
     <script>
         let tooltip = null;
@@ -171,6 +165,7 @@ if (isset($_SESSION['error_message'])) {
 
             tooltip.innerHTML = `
                 <strong>${info.event.title}</strong><br>
+                ${info.event.extendedProps.recipe_name}<br>
                 ${info.event.extendedProps.meal_category}<br>
                 Time: ${info.event.start.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})}
             `;
@@ -358,6 +353,9 @@ if (isset($_SESSION['error_message'])) {
                         
                         // Create a full date-time string
                         $dateTime = $plan['meal_date'] . 'T' . $formattedTime . ':00';
+                        // Get recipe title
+                        $recipeInfo = $recipeController->getRecipeInfo($plan['recipe_id']);
+                        $recipeTitle = $recipeInfo['title'];
                     ?>
                         events.push({
                             id: '<?php echo $plan['plan_id']; ?>',
@@ -367,7 +365,8 @@ if (isset($_SESSION['error_message'])) {
                             extendedProps: {
                                 plan_id: '<?php echo $plan['plan_id']; ?>',
                                 meal_category: '<?php echo htmlspecialchars($plan['meal_category']); ?>',
-                                meal_time: '<?php echo $formattedTime; ?>'
+                                meal_time: '<?php echo $formattedTime; ?>',
+                                recipe_name: '<?php echo htmlspecialchars($recipeTitle); ?>'
                             }
                         });
                     <?php endwhile; ?>
@@ -583,31 +582,13 @@ if (isset($_SESSION['error_message'])) {
 
             // Initialize time validation on page load
             updateTimeBasedOnCategory();
-
-            // Set minimum date for meal_date input to today
-            const mealDateInput = document.getElementById('meal_date');
-            const today = new Date().toISOString().split('T')[0];
-            mealDateInput.min = today;
-
-            // Form submission handling
-            document.getElementById('mealPlanForm').addEventListener('submit', function(e) {
-                const mealDate = new Date(document.getElementById('meal_date').value);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                
-                if (mealDate < today) {
-                    e.preventDefault();
-                    alert('Cannot create meal plans for past dates.');
-                    return false;
-                }
-            });
         });
     </script>
 </head>
 <body>
     <?php include '../includes/header.php'; ?>
 
-    <div class="container">
+    <div class="container mt-4">
         <?php if (isset($success_message)): ?>
             <div class="alert alert-success"><?php echo $success_message; ?></div>
         <?php endif; ?>
@@ -665,7 +646,8 @@ if (isset($_SESSION['error_message'])) {
                                 </div>
                                 <a href="view_meal_plan.php?plan_id=<?php echo $plan['plan_id']; ?>" class="text-decoration-none text-dark flex-grow-1">
                                     <strong><?php echo htmlspecialchars($plan['plan_name']); ?></strong><br>
-                                    <small>Category: <?php echo htmlspecialchars($plan['meal_category']); ?><br>
+                                    <small>Recipe: <?php echo htmlspecialchars($recipeController->getRecipeInfo($plan['recipe_id'])['title']); ?><br>
+                                    Category: <?php echo htmlspecialchars($plan['meal_category']); ?><br>
                                     Time: <?php 
                                         $hour = (int)$plan['meal_time'];
                                         $period = $hour >= 12 ? 'PM' : 'AM';

@@ -38,24 +38,8 @@ class MealPlanningController {
         return $timeInMinutes >= $startInMinutes && $timeInMinutes <= $endInMinutes;
     }
 
-    private function validateMealDate($meal_date) {
-        $mealDateTime = new DateTime($meal_date);
-        $today = new DateTime();
-        $today->setTime(0, 0, 0);
-        
-        return $mealDateTime >= $today;
-    }
-
     // Create a new meal plan
-    public function createMealPlan($user_id, $recipe_id, $plan_name, $meal_category, $meal_time, $meal_date) {
-        // Validate meal date
-        if (!$this->validateMealDate($meal_date)) {
-            return [
-                'success' => false,
-                'message' => 'Cannot create meal plans for past dates.'
-            ];
-        }
-
+    public function createMealPlan($recipe_id, $user_id, $plan_name, $meal_category, $meal_time, $meal_date) {
         // Validate meal time based on category
         if (!$this->validateMealTime($meal_category, $meal_time)) {
             $_SESSION['error'] = "Invalid meal time for selected category. " . 
@@ -65,28 +49,18 @@ class MealPlanningController {
             return false;
         }
 
-        return $this->model->createMealPlan($user_id, $recipe_id, $plan_name, $meal_category, $meal_time, $meal_date);
+        return $this->model->createMealPlan($recipe_id, $user_id, $plan_name, $meal_category, $meal_time, $meal_date);
     }
 
     // Update a meal plan
     public function updateMealPlan($plan_id, $recipe_id, $plan_name, $meal_category, $meal_time, $meal_date) {
-        // Validate meal date
-        if (!$this->validateMealDate($meal_date)) {
-            return [
-                'success' => false,
-                'message' => 'Cannot update meal plans to past dates.'
-            ];
-        }
-
         // Validate meal time based on category
         if (!$this->validateMealTime($meal_category, $meal_time)) {
-            return [
-                'success' => false,
-                'message' => "Invalid meal time for selected category. " . 
-                           $meal_category . " must be between " . 
-                           $this->categoryTimeRanges[$meal_category]['start'] . " and " . 
-                           $this->categoryTimeRanges[$meal_category]['end']
-            ];
+            $_SESSION['error'] = "Invalid meal time for selected category. " . 
+                               $meal_category . " must be between " . 
+                               $this->categoryTimeRanges[$meal_category]['start'] . " and " . 
+                               $this->categoryTimeRanges[$meal_category]['end'];
+            return false;
         }
 
         $result = $this->model->updateMealPlan($plan_id, $recipe_id, $plan_name, $meal_category, $meal_time, $meal_date);
@@ -102,6 +76,7 @@ class MealPlanningController {
                 'message' => 'Failed to update meal plan.'
             ];
         }
+        return $this->model->updateMealPlan($plan_id, $recipe_id, $plan_name, $meal_category, $meal_time, $meal_date);
     }
 
     // Get category time ranges

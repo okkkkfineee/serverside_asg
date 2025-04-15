@@ -128,18 +128,8 @@ $allRecipes = $recipeController->getAllRecipes();
                                 <p><strong>Meal Date:</strong> <?php echo date('F j, Y', strtotime($plan['meal_date'])); ?></p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Created:</strong> <?php 
-                                    $created_date = new DateTime($plan['created_date']);
-                                    echo $created_date->format('F j, Y h:i A'); 
-                                ?></p>
-                                <p><strong>Last Updated:</strong> <?php 
-                                    if (isset($plan['updated_at']) && $plan['updated_at']) {
-                                        $updated_date = new DateTime($plan['updated_at']);
-                                        echo $updated_date->format('F j, Y h:i:s A');
-                                    } else {
-                                        echo 'Not updated';
-                                    }
-                                ?></p>
+                                <p><strong>Created:</strong> <?php echo date('F j, Y h:i A', strtotime($plan['created_date'])); ?></p>
+                                <p><strong>Last Updated:</strong> <?php echo isset($plan['updated_at']) ? date('F j, Y h:i A', strtotime($plan['updated_at'])) : 'Not updated'; ?></p>
                             </div>
                         </div>
                     </div>
@@ -361,90 +351,86 @@ $allRecipes = $recipeController->getAllRecipes();
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set minimum date to today
-            const mealDateInput = document.getElementById('meal_date');
-            const today = new Date().toISOString().split('T')[0];
-            mealDateInput.min = today;
-
-            // Handle form submission
-            const form = document.getElementById('updateMealPlanForm');
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData(form);
-                
-                fetch('controller/meal_planning_controller.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        window.location.href = 'meal_planner.php';
-                    } else {
-                        alert(data.message);
+        // Function to update time options based on selected category
+        function updateTimeBasedOnCategory() {
+            const category = document.getElementById('meal_category').value;
+            const timeSelect = document.getElementById('meal_time');
+            
+            // Define time ranges for each category
+            const timeRanges = {
+                'Breakfast': { start: '05:00', end: '11:30' },
+                'Lunch': { start: '11:30', end: '16:30' },
+                'Dinner': { start: '17:00', end: '22:30' }
+            };
+            
+            // Clear existing options
+            timeSelect.innerHTML = '';
+            
+            if (category === 'Snacks') {
+                // For Snacks, show all times in 30-minute intervals
+                for (let i = 0; i < 24; i++) {
+                    for (let j = 0; j < 60; j += 30) {
+                        const timeStr = `${String(i).padStart(2, '0')}:${String(j).padStart(2, '0')}`;
+                        const displayHour = i % 12 || 12;
+                        const period = i >= 12 ? 'PM' : 'AM';
+                        const displayTime = `${displayHour}:${String(j).padStart(2, '0')} ${period}`;
+                        
+                        const option = document.createElement('option');
+                        option.value = timeStr;
+                        option.textContent = displayTime;
+                        
+                        // Check if this is the current selected time
+                        const currentTime = '<?php echo $plan['formatted_time']; ?>';
+                        if (currentTime.includes(timeStr)) {
+                            option.selected = true;
+                        }
+                        
+                        timeSelect.appendChild(option);
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while updating the meal plan.');
-                });
-            });
-
-            // Update time options based on category
-            function updateTimeBasedOnCategory() {
-                const category = document.getElementById('meal_category').value;
-                const timeSelect = document.getElementById('meal_time');
-                const currentTime = timeSelect.value;
-                
-                // Clear existing options
-                timeSelect.innerHTML = '';
-                
-                // Define time ranges for each category
-                const timeRanges = {
-                    'Breakfast': { start: '06:00', end: '11:00' },
-                    'Lunch': { start: '11:00', end: '15:00' },
-                    'Dinner': { start: '17:00', end: '22:00' },
-                    'Snacks': { start: '08:00', end: '22:00' }
-                };
-                
+                }
+            } else if (category && timeRanges[category]) {
                 const range = timeRanges[category];
-                if (!range) return;
                 
-                // Generate time options in 30-minute intervals
-                const [startHour, startMinute] = range.start.split(':').map(Number);
-                const [endHour, endMinute] = range.end.split(':').map(Number);
+                // Parse start and end times
+                const [startHour, startMin] = range.start.split(':').map(Number);
+                const [endHour, endMin] = range.end.split(':').map(Number);
                 
-                let currentHour = startHour;
-                let currentMinute = startMinute;
+                // Convert to minutes for easier calculation
+                const startTime = (startHour * 60) + startMin;
+                const endTime = (endHour * 60) + endMin;
                 
-                while (currentHour < endHour || (currentHour === endHour && currentMinute <= endMinute)) {
-                    const timeString = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
-                    const option = document.createElement('option');
-                    option.value = timeString;
-                    option.textContent = timeString;
+                // Generate options in 30-minute intervals
+                for (let time = startTime; time <= endTime; time += 30) {
+                    const hours = Math.floor(time / 60);
+                    const minutes = time % 60;
+                    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
                     
-                    if (timeString === currentTime) {
+                    // Format for display
+                    const displayHour = hours % 12 || 12;
+                    const period = hours >= 12 ? 'PM' : 'AM';
+                    const displayTime = `${displayHour}:${String(minutes).padStart(2, '0')} ${period}`;
+                    
+                    const option = document.createElement('option');
+                    option.value = timeStr;
+                    option.textContent = displayTime;
+                    
+                    // Check if this is the current selected time
+                    const currentTime = '<?php echo $plan['formatted_time']; ?>';
+                    if (currentTime.includes(timeStr)) {
                         option.selected = true;
                     }
                     
                     timeSelect.appendChild(option);
-                    
-                    currentMinute += 30;
-                    if (currentMinute >= 60) {
-                        currentHour += Math.floor(currentMinute / 60);
-                        currentMinute %= 60;
-                    }
                 }
             }
-
-            // Initialize time options on page load
+        }
+        
+        // Add event listener to update time options when category changes
+        document.getElementById('meal_category').addEventListener('change', updateTimeBasedOnCategory);
+        
+        // Initialize time options on page load
+        document.addEventListener('DOMContentLoaded', function() {
             updateTimeBasedOnCategory();
-            
-            // Update time options when category changes
-            document.getElementById('meal_category').addEventListener('change', updateTimeBasedOnCategory);
         });
     </script>
 </body>
