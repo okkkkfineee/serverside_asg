@@ -51,7 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: meal_planner.php");
                 exit();
             } else {
-                $error_message = "Failed to add meal plan. Please try again.";
+                $_SESSION['error_message'] = isset($_SESSION['error_message']) ? $_SESSION['error_message'] : "Failed to add meal plan. Please try again.";
+                header("Location: meal_planner.php");
+                exit();
             }
         } elseif ($_POST['action'] === 'delete_multiple') {
             if (isset($_POST['plan_ids'])) {
@@ -77,16 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-}
-
-// Get success/error messages from session
-if (isset($_SESSION['success_message'])) {
-    $success_message = $_SESSION['success_message'];
-    unset($_SESSION['success_message']);
-}
-if (isset($_SESSION['error_message'])) {
-    $error_message = $_SESSION['error_message'];
-    unset($_SESSION['error_message']);
 }
 ?>
 
@@ -272,6 +264,7 @@ if (isset($_SESSION['error_message'])) {
             if (deleteMode) {
                 actionBar.style.display = 'block';
                 setTimeout(() => actionBar.classList.add('show'), 10);
+                handleCheckboxChange();
             } else {
                 actionBar.classList.remove('show');
                 setTimeout(() => actionBar.style.display = 'none', 300);
@@ -280,13 +273,38 @@ if (isset($_SESSION['error_message'])) {
             }
         }
 
+        // Handle checkbox change
+        function handleCheckboxChange() {
+            const checkedCount = document.querySelectorAll('.meal-plan-checkbox input:checked').length;
+            const deleteActionBar = document.getElementById('deleteActionBar');
+            if (deleteMode) {
+                deleteActionBar.style.display = 'block';
+            } else {
+                deleteActionBar.style.display = checkedCount > 0 ? 'block' : 'none';
+            }
+            updateSelectedCount();
+        }
+
         // Update selected count
         function updateSelectedCount() {
             const count = document.querySelectorAll('.meal-plan-checkbox input:checked').length;
+            const total = document.querySelectorAll('.meal-plan-checkbox input').length;
             const countElement = document.getElementById('selectedCount');
             if (countElement) {
-                countElement.textContent = `${count} item${count !== 1 ? 's' : ''} selected`;
+                countElement.textContent = `${count} of ${total} item${total !== 1 ? 's' : ''} selected`;
             }
+        }
+
+        // Toggle select all function
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('.meal-plan-checkbox input');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            checkboxes.forEach(cb => {
+                cb.checked = !allChecked;
+            });
+            
+            handleCheckboxChange();
         }
 
         // Delete selected plans
@@ -353,6 +371,7 @@ if (isset($_SESSION['error_message'])) {
                         
                         // Create a full date-time string
                         $dateTime = $plan['meal_date'] . 'T' . $formattedTime . ':00';
+                        
                         // Get recipe title
                         $recipeInfo = $recipeController->getRecipeInfo($plan['recipe_id']);
                         $recipeTitle = $recipeInfo['title'];
@@ -589,22 +608,28 @@ if (isset($_SESSION['error_message'])) {
     <?php include '../includes/header.php'; ?>
 
     <div class="container mt-4">
-        <?php if (isset($success_message)): ?>
-            <div class="alert alert-success"><?php echo $success_message; ?></div>
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?php echo $_SESSION['success_message']; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <?php echo $_SESSION['error_message']; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['error_message']); ?>
         <?php endif; ?>
         
-        <?php if (isset($error_message)): ?>
-            <div class="alert alert-danger"><?php echo $error_message; ?></div>
-        <?php endif; ?>
-        
-        <?php if (isset($_GET['deleted']) && $_GET['deleted'] == 1): ?>
-            <div class="alert alert-success">Meal plan deleted successfully!</div>
-        <?php endif; ?>
 
         <!-- Multi-delete action bar -->
         <div id="deleteActionBar" class="action-bar" style="display: none;">
             <div class="action-bar-content">
                 <span id="selectedCount">0 items selected</span>
+                <button class="btn btn-secondary me-2" onclick="toggleSelectAll()">Select All</button>
                 <button class="btn btn-danger" onclick="deleteSelectedPlans()">Delete Selected</button>
             </div>
         </div>
@@ -750,7 +775,8 @@ if (isset($_SESSION['error_message'])) {
                         
                         <div class="mb-3">
                             <label for="meal_date" class="form-label">Meal Date</label>
-                            <input type="date" class="form-control" id="meal_date" name="meal_date" required>
+                            <input type="date" class="form-control" id="meal_date" name="meal_date" required min="<?php echo date('Y-m-d'); ?>">
+                            <div id="dateError" class="invalid-feedback"></div>
                         </div>
                         
                         <div class="mb-3">

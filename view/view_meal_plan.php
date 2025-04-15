@@ -300,7 +300,8 @@ $allRecipes = $recipeController->getAllRecipes();
 
                         <div class="mb-3">
                             <label for="meal_date" class="form-label">Meal Date</label>
-                            <input type="date" class="form-control" id="meal_date" name="meal_date" value="<?php echo $plan['meal_date']; ?>" required>
+                            <input type="date" class="form-control" id="meal_date" name="meal_date" value="<?php echo $plan['meal_date']; ?>" min="<?php echo date('Y-m-d'); ?>" required>
+                            <div id="dateError" class="invalid-feedback"></div>
                         </div>
 
                         <div class="mb-3">
