@@ -7,11 +7,18 @@ require '../controller/recipe_controller.php';
 $mealPlanningController = new MealPlanningController($conn);
 $recipeController = new RecipeController($conn);
 
+// Check if user has admin role
+$isAdmin = isset($_SESSION['roles']) && in_array($_SESSION['roles'], ['Superadmin', 'Admin', 'Mod']);
+
 // Get all recipes for the dropdown
 $allRecipes = $recipeController->getAllRecipes();
 
-// Get user's meal plans
-$userMealPlans = $mealPlanningController->getUserMealPlans($_SESSION['user_id']);
+// Get user's meal plans or all meal plans if admin
+if ($isAdmin) {
+    $userMealPlans = $mealPlanningController->getAllMealPlans();
+} else {
+    $userMealPlans = $mealPlanningController->getUserMealPlans($_SESSION['user_id']);
+}
 
 // Get selected category filter
 $selectedCategory = isset($_GET['category']) ? $_GET['category'] : 'All';
@@ -19,7 +26,11 @@ $selectedCategory = isset($_GET['category']) ? $_GET['category'] : 'All';
 // Filter meal plans by category if a specific category is selected
 $filteredMealPlans = null;
 if ($selectedCategory !== 'All') {
-    $filteredMealPlans = $mealPlanningController->getMealPlansByCategory($_SESSION['user_id'], $selectedCategory);
+    if ($isAdmin) {
+        $filteredMealPlans = $mealPlanningController->getAllMealPlansByCategory($selectedCategory);
+    } else {
+        $filteredMealPlans = $mealPlanningController->getMealPlansByCategory($_SESSION['user_id'], $selectedCategory);
+    }
 } else {
     $filteredMealPlans = $userMealPlans;
 }
@@ -45,9 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             
             if ($result) {
-                // Store success message in session
                 $_SESSION['success_message'] = "Meal plan added successfully!";
-                // Redirect to GET request
                 header("Location: meal_planner.php");
                 exit();
             } else {
@@ -93,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Stylesheets -->
     <link rel="stylesheet" href="../assets/css/header.css">
     <link rel="stylesheet" href="../assets/css/styles.css">
-    <link rel="stylesheet" href="../assets/css/meal_planner.css?v=<?php echo time(); ?>">  <!-- Force reload CSS -->
+    <link rel="stylesheet" href="../assets/css/meal_planner.css?v=<?php echo time(); ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- FullCalendar -->
@@ -114,12 +123,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .meal-plans-list {
-            max-height: 400px; /* Height for approximately 4 meal plans */
+            max-height: 400px;
             overflow-y: auto;
             padding-right: 10px;
         }
 
-        /* Customize scrollbar for better appearance */
         .meal-plans-list::-webkit-scrollbar {
             width: 6px;
         }
@@ -136,6 +144,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .meal-plans-list::-webkit-scrollbar-thumb:hover {
             background: #555;
+        }
+
+        .username-badge {
+            background-color: #6c757d;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 5px;
         }
     </style>
     <script>
@@ -159,19 +176,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <strong>${info.event.title}</strong><br>
                 ${info.event.extendedProps.recipe_name}<br>
                 ${info.event.extendedProps.meal_category}<br>
+                ${info.event.extendedProps.username ? 'User: ' + info.event.extendedProps.username + '<br>' : ''}
                 Time: ${info.event.start.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})}
             `;
             
             tooltip.style.display = 'block';
             
-            // Position the tooltip
             const tooltipHeight = tooltip.offsetHeight;
             const tooltipWidth = tooltip.offsetWidth;
             
             let top = rect.top + scrollTop - tooltipHeight - 10;
             let left = rect.left + scrollLeft + (rect.width - tooltipWidth) / 2;
             
-            // Adjust if tooltip would go off screen
             if (top < scrollTop) {
                 top = rect.bottom + scrollTop + 10;
             }
@@ -206,15 +222,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const timeError = document.getElementById('timeError');
             const selectedTime = timeSelect.value;
             
-            // Reset validation state
             timeSelect.classList.remove('is-invalid');
             timeError.textContent = '';
             
             if (!category) return;
 
-            // Show/hide time options based on category
             Array.from(timeSelect.options).forEach(option => {
-                if (option.value === '') return; // Skip placeholder option
+                if (option.value === '') return;
                 
                 if (option.getAttribute('data-category') === category) {
                     option.style.display = '';
@@ -223,7 +237,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
 
-            // If a time is already selected but not for this category, clear it
             if (selectedTime) {
                 const selectedOption = timeSelect.options[timeSelect.selectedIndex];
                 if (selectedOption.getAttribute('data-category') !== category) {
@@ -273,7 +286,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Handle checkbox change
         function handleCheckboxChange() {
             const checkedCount = document.querySelectorAll('.meal-plan-checkbox input:checked').length;
             const deleteActionBar = document.getElementById('deleteActionBar');
@@ -285,7 +297,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             updateSelectedCount();
         }
 
-        // Update selected count
         function updateSelectedCount() {
             const count = document.querySelectorAll('.meal-plan-checkbox input:checked').length;
             const total = document.querySelectorAll('.meal-plan-checkbox input').length;
@@ -295,7 +306,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Toggle select all function
         function toggleSelectAll() {
             const checkboxes = document.querySelectorAll('.meal-plan-checkbox input');
             const allChecked = Array.from(checkboxes).every(cb => cb.checked);
@@ -307,7 +317,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             handleCheckboxChange();
         }
 
-        // Delete selected plans
         function deleteSelectedPlans() {
             const selectedPlans = document.querySelectorAll('.meal-plan-checkbox input:checked');
             if (selectedPlans.length === 0) {
@@ -350,29 +359,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Wait for DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             createTooltip();
             var calendar = null;
 
             function initializeCalendar() {
-            var calendarEl = document.getElementById('calendar');
+                var calendarEl = document.getElementById('calendar');
                 
-                // Prepare events data from PHP
                 var events = [];
                 <?php if ($filteredMealPlans && $filteredMealPlans->num_rows > 0): ?>
                     <?php 
                     $filteredMealPlans->data_seek(0);
                     while ($plan = $filteredMealPlans->fetch_assoc()): 
-                        // Format the time properly for the calendar
                         $hours = floor($plan['meal_time'] / 60);
                         $minutes = $plan['meal_time'] % 60;
                         $formattedTime = sprintf("%02d:%02d", $hours, $minutes);
-                        
-                        // Create a full date-time string
                         $dateTime = $plan['meal_date'] . 'T' . $formattedTime . ':00';
-                        
-                        // Get recipe title
                         $recipeInfo = $recipeController->getRecipeInfo($plan['recipe_id']);
                         $recipeTitle = $recipeInfo['title'];
                     ?>
@@ -385,15 +387,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 plan_id: '<?php echo $plan['plan_id']; ?>',
                                 meal_category: '<?php echo htmlspecialchars($plan['meal_category']); ?>',
                                 meal_time: '<?php echo $formattedTime; ?>',
-                                recipe_name: '<?php echo htmlspecialchars($recipeTitle); ?>'
+                                recipe_name: '<?php echo htmlspecialchars($recipeTitle); ?>',
+                                username: '<?php echo $isAdmin ? htmlspecialchars($plan['username']) : ''; ?>'
                             }
                         });
                     <?php endwhile; ?>
                 <?php endif; ?>
                 
                 calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                selectable: true,
+                    initialView: 'dayGridMonth',
+                    selectable: true,
                     events: events.map(event => ({
                         ...event,
                         backgroundColor: getEventColor(event.extendedProps.meal_category),
@@ -413,13 +416,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         today.setHours(0, 0, 0, 0);
                         
                         if (eventDate < today) {
-                            // Past events styling
                             info.el.style.backgroundColor = '#808080';
                             info.el.style.borderColor = '#696969';
                             info.el.style.color = '#ffffff';
                             info.el.style.opacity = '0.9';
                             
-                            // Add hover effect for past events
                             info.el.style.transition = 'all 0.3s ease';
                             info.el.addEventListener('mouseover', function(e) {
                                 info.el.style.backgroundColor = '#696969';
@@ -434,7 +435,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 hideTooltip();
                             });
                         } else {
-                            // Add hover effect for non-past events
                             info.el.style.transition = 'all 0.3s ease';
                             info.el.style.backgroundColor = getEventColor(info.event.extendedProps.meal_category);
                             info.el.addEventListener('mouseover', function(e) {
@@ -453,60 +453,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             });
                         }
 
-                        // Add mousemove handler for tooltip positioning
                         info.el.addEventListener('mousemove', function(e) {
                             if (tooltip.style.display === 'block') {
                                 showTooltip(e, info);
                             }
                         });
                     },
-                eventClick: function(info) {
+                    eventClick: function(info) {
                         window.location.href = 'view_meal_plan.php?plan_id=' + info.event.extendedProps.plan_id;
-                },
-                select: function(info) {
+                    },
+                    select: function(info) {
                         document.getElementById('meal_date').value = info.startStr;
-                    var modal = new bootstrap.Modal(document.getElementById('mealModal'));
-                    modal.show();
-                }
-            });
-            calendar.render();
+                        var modal = new bootstrap.Modal(document.getElementById('mealModal'));
+                        modal.show();
+                    }
+                });
+                calendar.render();
             }
 
-            // Helper function to darken/lighten colors
             function getEventColor(category) {
                 const colors = {
-                    'Breakfast': '#fff3e0',  // Light Orange
-                    'Lunch': '#e8f5e9',      // Light Green
-                    'Dinner': '#e3f2fd',     // Light Blue
-                    'Snacks': '#f3e5f5'      // Light Purple
+                    'Breakfast': '#fff3e0',
+                    'Lunch': '#e8f5e9',
+                    'Dinner': '#e3f2fd',
+                    'Snacks': '#f3e5f5'
                 };
                 return colors[category] || '#e9ecef';
             }
 
             function getEventBorderColor(category) {
                 const colors = {
-                    'Breakfast': '#ff9800',  // Orange
-                    'Lunch': '#4caf50',      // Green
-                    'Dinner': '#2196f3',     // Blue
-                    'Snacks': '#9c27b0'      // Purple
+                    'Breakfast': '#ff9800',
+                    'Lunch': '#4caf50',
+                    'Dinner': '#2196f3',
+                    'Snacks': '#9c27b0'
                 };
                 return colors[category] || '#6c757d';
             }
 
             function getHoverColor(category) {
                 const colors = {
-                    'Breakfast': '#ff9800',  // Orange
-                    'Lunch': '#4caf50',      // Green
-                    'Dinner': '#2196f3',     // Blue
-                    'Snacks': '#9c27b0'      // Purple
+                    'Breakfast': '#ff9800',
+                    'Lunch': '#4caf50',
+                    'Dinner': '#2196f3',
+                    'Snacks': '#9c27b0'
                 };
                 return colors[category] || '#6c757d';
             }
 
-            // Initialize calendar on page load
             initializeCalendar();
 
-            // Handle form submission
             document.querySelector('form[action=""]').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
@@ -515,7 +511,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 fetch('meal_planner.php', {
                     method: 'POST',
                     body: formData,
-                    redirect: 'follow' // Follow redirects
+                    redirect: 'follow'
                 })
                 .then(response => {
                     if (response.redirected) {
@@ -537,7 +533,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             });
 
-            // Toggle between existing recipe and new recipe
             document.getElementById('mealSource').addEventListener('change', function() {
                 var existingRecipeSection = document.getElementById('existingRecipeSection');
                 var newRecipeSection = document.getElementById('newRecipeSection');
@@ -551,18 +546,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
 
-            // Add event listeners to checkboxes
             document.querySelectorAll('.meal-plan-checkbox input').forEach(checkbox => {
                 checkbox.addEventListener('change', updateSelectedCount);
             });
 
-            // Add click handlers
             const deleteSelectedBtn = document.getElementById('deleteSelected');
             if (deleteSelectedBtn) {
                 deleteSelectedBtn.addEventListener('click', deleteSelectedPlans);
             }
 
-            // Prevent clicking on meal plan links when in delete mode
             document.querySelectorAll('.meal-plan-item a').forEach(link => {
                 link.addEventListener('click', (e) => {
                     if (deleteMode) {
@@ -576,7 +568,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             });
 
-            // Add form validation
             document.querySelector('form[action=""]').addEventListener('submit', function(e) {
                 const category = document.getElementById('meal_category').value;
                 const timeSelect = document.getElementById('meal_time');
@@ -599,7 +590,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
 
-            // Initialize time validation on page load
             updateTimeBasedOnCategory();
         });
     </script>
@@ -624,7 +614,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php unset($_SESSION['error_message']); ?>
         <?php endif; ?>
         
-
         <!-- Multi-delete action bar -->
         <div id="deleteActionBar" class="action-bar" style="display: none;">
             <div class="action-bar-content">
@@ -649,7 +638,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </nav>
                 
                 <div class="d-flex justify-content-between align-items-center mt-4">
-                    <h4 class="mb-0">Your Meal Plans</h4>
+                    <h4 class="mb-0"><?php echo $isAdmin ? 'All Meal Plans' : 'Your Meal Plans'; ?></h4>
                     <button id="toggleDelete" class="btn btn-outline-danger btn-sm" onclick="toggleDeleteMode()" style="background-color: red !important;">
                         <img src="..\assets\images\meal_planner\trash.png" alt="Delete" style="width: 20px; height: 20px;">
                     </button>
@@ -670,7 +659,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="checkbox" class="form-check-input me-2" value="<?php echo $plan['plan_id']; ?>">
                                 </div>
                                 <a href="view_meal_plan.php?plan_id=<?php echo $plan['plan_id']; ?>" class="text-decoration-none text-dark flex-grow-1">
-                                    <strong><?php echo htmlspecialchars($plan['plan_name']); ?></strong><br>
+                                    <strong><?php echo htmlspecialchars($plan['plan_name']); ?></strong>
+                                    <?php if ($isAdmin): ?>
+                                        <span class="username-badge"><?php echo htmlspecialchars($plan['username']); ?></span>
+                                    <?php endif; ?>
+                                    <br>
                                     <small>Recipe: <?php echo htmlspecialchars($recipeController->getRecipeInfo($plan['recipe_id'])['title']); ?><br>
                                     Category: <?php echo htmlspecialchars($plan['meal_category']); ?><br>
                                     Time: <?php 
@@ -733,7 +726,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <select class="form-select" id="meal_time" name="meal_time" required>
                                     <option value="">-- Select Time --</option>
                                     <?php 
-                                    // Define time ranges for each category
                                     $timeRanges = [
                                         'Breakfast' => ['start' => '05:00', 'end' => '11:30'],
                                         'Lunch' => ['start' => '11:30', 'end' => '16:30'],
@@ -741,7 +733,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         'Snacks' => ['start' => '00:00', 'end' => '23:30']
                                     ];
                                     
-                                    // Generate time options for each category
                                     foreach ($timeRanges as $category => $range) {
                                         echo "<optgroup label=\"$category\">";
                                         
@@ -756,7 +747,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             $minutes = $time % 60;
                                             $timeStr = sprintf("%02d:%02d", $hours, $minutes);
                                             
-                                            // Format for display
                                             $displayHour = $hours % 12;
                                             $displayHour = $displayHour == 0 ? 12 : $displayHour;
                                             $period = $hours >= 12 ? 'PM' : 'AM';

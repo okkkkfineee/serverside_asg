@@ -9,6 +9,7 @@ class MealPlanningController {
         'Lunch' => ['start' => '11:30', 'end' => '16:30'],
         'Dinner' => ['start' => '15:30', 'end' => '22:00']
     ];
+    private $adminRoles = ['Superadmin', 'Admin', 'Mod'];
 
     public function __construct($db) {
         $this->model = new MealPlanning($db);
@@ -22,7 +23,7 @@ class MealPlanningController {
         }
 
         if (!isset($this->categoryTimeRanges[$meal_category])) {
-            return false;
+            return true;
         }
 
         $range = $this->categoryTimeRanges[$meal_category];
@@ -49,36 +50,55 @@ class MealPlanningController {
 
         // Validate meal time based on category
         if (!$this->validateMealTime($meal_category, $meal_time)) {
-            $_SESSION['error_message'] = "Invalid meal time for selected category. " . 
-                               $meal_category . " must be between " . 
-                               $this->categoryTimeRanges[$meal_category]['start'] . " and " . 
-                               $this->categoryTimeRanges[$meal_category]['end'];
+            $timeRangeMsg = isset($this->categoryTimeRanges[$meal_category])
+                            ? " must be between " . $this->categoryTimeRanges[$meal_category]['start'] . " and " . $this->categoryTimeRanges[$meal_category]['end']
+                            : ".";
+            $_SESSION['error_message'] = "Invalid meal time for selected category. " . $meal_category . $timeRangeMsg;
             return false;
         }
 
-        return $this->model->createMealPlan($recipe_id, $user_id, $plan_name, $meal_category, $meal_time, $meal_date);
+        // Convert time HH:MM to total minutes from midnight for storage
+        list($hours, $minutes) = explode(':', $meal_time);
+        $timeInMinutes = ($hours * 60) + $minutes;
+
+        return $this->model->createMealPlan($recipe_id, $user_id, $plan_name, $meal_category, $timeInMinutes, $meal_date);
     }
 
     // Update a meal plan
     public function updateMealPlan($plan_id, $recipe_id, $plan_name, $meal_category, $meal_time, $meal_date) {
+        // Basic permission check: Is the user the owner or an admin?
+        $plan = $this->getMealPlanById($plan_id);
+        if (!$plan) {
+            return ['success' => false, 'message' => 'Meal plan not found.'];
+        }
+
+        $isOwner = isset($_SESSION['user_id']) && $plan['user_id'] == $_SESSION['user_id'];
+        $isAdmin = isset($_SESSION['roles']) && in_array($_SESSION['roles'], $this->adminRoles);
+
+        if (!$isOwner && !$isAdmin) {
+            return ['success' => false, 'message' => 'You do not have permission to update this meal plan.'];
+        }
+
         // Validate meal date is not in the past
         $current_date = date('Y-m-d');
         if ($meal_date < $current_date) {
-            $_SESSION['error_message'] = "Cannot update meal plan to past dates.";
-            return false;
+            return ['success' => false, 'message' => 'Cannot update meal plan to past dates.'];
         }
 
         // Validate meal time based on category
         if (!$this->validateMealTime($meal_category, $meal_time)) {
-            $_SESSION['error_message'] = "Invalid meal time for selected category. " . 
-                               $meal_category . " must be between " . 
-                               $this->categoryTimeRanges[$meal_category]['start'] . " and " . 
-                               $this->categoryTimeRanges[$meal_category]['end'];
-            return false;
+            $timeRangeMsg = isset($this->categoryTimeRanges[$meal_category])
+                            ? " must be between " . $this->categoryTimeRanges[$meal_category]['start'] . " and " . $this->categoryTimeRanges[$meal_category]['end']
+                            : ".";
+            return ['success' => false, 'message' => "Invalid meal time for selected category. " . $meal_category . $timeRangeMsg];
         }
 
-        $result = $this->model->updateMealPlan($plan_id, $recipe_id, $plan_name, $meal_category, $meal_time, $meal_date);
-        
+        // Convert time HH:MM to total minutes from midnight for storage
+        list($hours, $minutes) = explode(':', $meal_time);
+        $timeInMinutes = ($hours * 60) + $minutes;
+
+        $result = $this->model->updateMealPlan($plan_id, $recipe_id, $plan_name, $meal_category, $timeInMinutes, $meal_date);
+
         if ($result) {
             return [
                 'success' => true,
@@ -102,19 +122,50 @@ class MealPlanningController {
     }
 
     public function getMealPlanById($plan_id) {
-        return $this->model->getMealPlanById($plan_id);
+        $result = $this->model->getMealPlanById($plan_id);
+        if (!$result) {
+            return null;
+        }
+        return $result;
     }
     
     public function deleteMealPlan($plan_id) {
-        return $this->model->deleteMealPlan($plan_id);
+        $plan = $this->getMealPlanById($plan_id);
+        if (!$plan) {
+            $_SESSION['error_message'] = "Meal plan not found.";
+            return false;
+        }
+
+        $isOwner = isset($_SESSION['user_id']) && $plan['user_id'] == $_SESSION['user_id'];
+        $isAdmin = isset($_SESSION['roles']) && in_array($_SESSION['roles'], $this->adminRoles);
+
+        if ($isOwner || $isAdmin) {
+            return $this->model->deleteMealPlan($plan_id);
+        } else {
+            $_SESSION['error_message'] = "You do not have permission to delete this meal plan.";
+            return false;
+        }
     }
     
     public function getMealPlansByCategory($user_id, $meal_category) {
         return $this->model->getMealPlansByCategory($user_id, $meal_category);
     }
 
+    // Get all meal plans (for admins)
+    public function getAllMealPlans() {
+        return $this->model->getAllMealPlans();
+    }
+
+    // Get all meal plans by category (for admins)
+    public function getAllMealPlansByCategory($meal_category) {
+        return $this->model->getAllMealPlansByCategory($meal_category);
+    }
+
     // Get user meal plans with alarms
     public function getUserMealPlansWithAlarms($user_id) {
+        if (!isset($_SESSION['user_id']) || $user_id != $_SESSION['user_id']) {
+            return false;
+        }
         return $this->model->getUserMealPlansWithAlarms($user_id);
     }
 }

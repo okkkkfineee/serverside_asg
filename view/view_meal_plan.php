@@ -7,14 +7,15 @@ require '../controller/recipe_controller.php';
 $mealPlanningController = new MealPlanningController($conn);
 $recipeController = new RecipeController($conn);
 
+// Check if user has admin role
+$isAdmin = isset($_SESSION['roles']) && in_array($_SESSION['roles'], ['Superadmin', 'Admin', 'Mod']);
+
 // Get meal plan details
 if (isset($_GET['plan_id'])) {
     $plan_id = $_GET['plan_id'];
-    $mealPlan = $mealPlanningController->getMealPlanById($plan_id);
+    $plan = $mealPlanningController->getMealPlanById($plan_id);
     
-    if ($mealPlan && $mealPlan->num_rows > 0) {
-        $plan = $mealPlan->fetch_assoc();
-        
+    if ($plan) {
         // Get recipe details
         $recipe = $recipeController->getRecipeInfo($plan['recipe_id']);
         
@@ -25,7 +26,7 @@ if (isset($_GET['plan_id'])) {
         $steps = $recipeController->getSteps($plan['recipe_id']);
         
         // Check if user is authorized to view/edit this meal plan
-        if ($plan['user_id'] != $_SESSION['user_id']) {
+        if (!$isAdmin && $plan['user_id'] != $_SESSION['user_id']) {
             header("Location: meal_planner.php");
             exit();
         }
@@ -111,12 +112,14 @@ $allRecipes = $recipeController->getAllRecipes();
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Meal Plan Details</h5>
                         <div>
+                            <?php if ($isAdmin || $plan['user_id'] == $_SESSION['user_id']): ?>
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">
                                 Edit Plan
                             </button>
                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                                 Delete Plan
                             </button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="card-body">
@@ -130,6 +133,9 @@ $allRecipes = $recipeController->getAllRecipes();
                             <div class="col-md-6">
                                 <p><strong>Created:</strong> <?php echo date('F j, Y h:i A', strtotime($plan['created_date'])); ?></p>
                                 <p><strong>Last Updated:</strong> <?php echo isset($plan['updated_at']) ? date('F j, Y h:i A', strtotime($plan['updated_at'])) : 'Not updated'; ?></p>
+                                <?php if ($isAdmin): ?>
+                                <p><strong>User:</strong> <?php echo htmlspecialchars($plan['username']); ?></p>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
