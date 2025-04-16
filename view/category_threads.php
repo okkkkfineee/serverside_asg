@@ -30,6 +30,7 @@ $message = $_GET['message'] ?? null;
 <head>
   <meta charset="UTF-8">
   <title>Threads in <?= htmlspecialchars($category['name']) ?></title>
+  <link rel="icon" href="../assets/images/icon.png">
   <link rel="stylesheet" href="../assets/css/header.css">
   <link rel="stylesheet" href="../assets/css/styles.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -116,8 +117,8 @@ $message = $_GET['message'] ?? null;
                     <div class="me-2">
                         <!-- if the current user is the thread creator or an admin, show edit and delete buttons -->
                         <?php if ($currentUserId === $threadCreatorId || $userController->isSuperadmin() || $userController->isAdmin() || $userController->isMod()): ?>
-                            <a href="edit_thread_form.php?id=<?= $thread['thread_id'] ?>" class="btn btn-warning btn-sm">Edit</a>
-                            <a href="delete_thread.php?id=<?= $thread['thread_id'] ?>&category_id=<?= $categoryId ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this thread?');">Delete</a>
+                            <a href="edit_thread_form.php?id=<?= $thread['thread_id'] ?>" class="btn btn-warning btn-sm px-3">Edit</a>
+                            <a href="delete_thread.php?id=<?= $thread['thread_id'] ?>&category_id=<?= $categoryId ?>" class="btn btn-danger btn-sm me-2" onclick="return confirm('Are you sure you want to delete this thread?');">Delete</a>
                         <?php endif; ?>
                     </div>
                     <div>
@@ -125,7 +126,7 @@ $message = $_GET['message'] ?? null;
                         <?php if ($currentUserId !== $threadCreatorId): ?>
                             <a href="rating_form.php?thread_id=<?= $thread['thread_id'] ?>" class="btn btn-secondary btn-sm">Rate this Thread</a> <!-- Rating Button -->
                         <?php else: ?>
-                            <span class="text-muted btn btn-secondary btn-sm" disabled>Cannot Rate Your Own Thread</span>
+                            <span class="text-light btn btn-secondary btn-sm disabled" disabled>Cannot Rate Your Own Thread</span>
                         <?php endif; ?>
                     </div>
                 </div>

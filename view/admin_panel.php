@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php foreach ($recipes as $recipe) : ?>
                                 <div class="col-lg-4 col-md-6 col-sm-12 col-xl-3 justify-content-center mb-4">
                                     <div class="card border shadow-sm" style="width: 100%; max-width: 20rem; height: 100%;">
-                                        <img src="../uploads/recipes/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top" alt="Recipe Image" width="50" height="230">
+                                        <img src="../uploads/recipes/<?php echo $recipe['images'] ?? 'default_recipe.png'; ?>" class="card-img-top" alt="Recipe Image" width="50" height="180">
                                         <div class="d-flex flex-column card-body justify-content-between p-3 text-start" style=" flex-grow: 1;">
                                             <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
                                             <p class="card-text"><?php echo htmlspecialchars(substr($recipe['description'], 0, 80)) . '...'; ?></p>
@@ -260,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php foreach ($comps as $comp) : ?>
                                 <div class="col-lg-4 col-md-6 col-sm-12 col-xl-3 justify-content-center mb-4">
                                     <div class="card border shadow-sm" style="width: 100%; max-width: 20rem; height: 100%;">
-                                        <img src="<?php echo isset($comp['comp_image']) ? "../uploads/comp/" . $comp['comp_image'] : '../assets/images/default_comp.png'; ?>" class="card-img-top" alt="Competition Image" width="50" height="230">
+                                        <img src="<?php echo isset($comp['comp_image']) ? "../uploads/comp/" . $comp['comp_image'] : '../assets/images/default_comp.png'; ?>" class="card-img-top" alt="Competition Image" width="50" height="180">
                                         <div class="d-flex flex-column card-body justify-content-between p-3 text-start" style=" flex-grow: 1;">
                                             <h5 class="card-title"><?php echo htmlspecialchars($comp['comp_title']); ?></h5>
                                             <p class="card-text"><?php echo htmlspecialchars(substr(str_replace(['\\r\\n', '\\n', '\\r'], "\n", $comp['comp_desc']), 0, 80)) . '...'; ?></p>

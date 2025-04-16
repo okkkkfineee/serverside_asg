@@ -27,6 +27,7 @@ $message = $_GET['message'] ?? null; // Optional message to display after rating
 <head>
     <meta charset="UTF-8">
     <title>Rate Thread: <?= htmlspecialchars($thread['title']) ?></title>
+    <link rel="icon" href="../assets/images/icon.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <style>
         body {

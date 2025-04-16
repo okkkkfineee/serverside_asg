@@ -41,19 +41,23 @@ $categories = $forumController->getAllCategories();
             <?php else: ?>
                 <?php foreach ($categories as $category): ?>
                     <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="card shadow-sm border-light">
+                        <div class="card shadow-sm border-light" style="height: 180px;">
                             <div class="card-body">
                                 <h5 class="card-title"><?= htmlspecialchars($category['name']) ?></h5>
                                 <p class="card-text"><?= htmlspecialchars($category['description']) ?></p>
-                                <a href="category_threads.php?id=<?= $category['category_id'] ?>" class="btn btn-primary">View Threads</a>
-
+                            </div>
+                            <div class="d-flex justify-content-between p-3">
                                 <?php if ($userController->isSuperadmin() || $userController->isAdmin() || $userController->isMod()): ?>
-                                    <a href="edit_category.php?id=<?= $category['category_id'] ?>" class="btn btn-warning">Edit</a>
-                                    <form action="../controller/forum_controller.php?action=deleteCategory" method="POST" style="display:inline;">
-                                        <input type="hidden" name="category_id" value="<?= $category['category_id'] ?>">
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this category?');">Delete</button>
-                                    </form>
+                                    <div class="d-flex gap-2">
+                                        <a href="edit_category.php?id=<?= $category['category_id'] ?>" class="btn btn-warning">Edit</a>
+                                        <form action="../controller/forum_controller.php?action=deleteCategory" method="POST" style="display:inline;">
+                                            <input type="hidden" name="category_id" value="<?= $category['category_id'] ?>">
+                                            <button type="submit" class="btn btn-danger" style="background-color: red !important;" onclick="return confirm('Are you sure you want to delete this category?');">Delete</button>
+                                        </form>
+                                    </div>
                                 <?php endif; ?>
+                                
+                                <a href="category_threads.php?id=<?= $category['category_id'] ?>" class="btn btn-primary">View Threads</a>
                             </div>
                         </div>
                     </div>

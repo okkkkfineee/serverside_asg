@@ -650,7 +650,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <div class="d-flex justify-content-between align-items-center mt-4">
                     <h4 class="mb-0">Your Meal Plans</h4>
-                    <button id="toggleDelete" class="btn btn-outline-danger btn-sm" onclick="toggleDeleteMode()">
+                    <button id="toggleDelete" class="btn btn-outline-danger btn-sm" onclick="toggleDeleteMode()" style="background-color: red !important;">
                         <img src="..\assets\images\meal_planner\trash.png" alt="Delete" style="width: 20px; height: 20px;">
                     </button>
                 </div>
@@ -814,7 +814,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: red !important;">Cancel</button>
                             <button type="submit" class="btn btn-primary">Save Meal Plan</button>
                         </div>
                     </form>

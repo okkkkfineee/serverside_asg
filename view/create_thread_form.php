@@ -11,6 +11,7 @@ $userId = $_SESSION['user_id']; // Assuming the user ID is stored in session
 <head>
   <meta charset="UTF-8">
   <title>Create New Thread</title>
+  <link rel="icon" href="../assets/images/icon.png">
   <link rel="stylesheet" href="../assets/css/header.css">
   <link rel="stylesheet" href="../assets/css/styles.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">

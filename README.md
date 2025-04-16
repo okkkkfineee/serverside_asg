@@ -26,6 +26,8 @@ This Recipe Website provide a platform for user to explore and share different r
 
 **Moderator Role Special Functionality**:  
 - Host, Edit and Delete Competition  
+- Create and Delete Forums Categories  
+
 
 **Requirements**  
 To run this website on local, you will need the following:  

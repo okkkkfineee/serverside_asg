@@ -254,8 +254,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="button-container">
-                    <button type="submit" name="action" value="Edit" class="btn btn-primary">Update Changes</button>
-                    <a href="admin_panel?page=1" class="btn btn-secondary">Discard Changes</a>
+                    <button type="submit" name="action" value="Edit" class="btn btn-primary me-3">Update Changes</button>
+                    <a href="admin_panel?page=1" class="btn btn-secondary" style="background-color: red !important;">Discard Changes</a>
                 </div>
             </form>
         <?php endif; ?>
