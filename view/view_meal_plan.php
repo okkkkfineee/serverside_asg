@@ -55,8 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($result) {
                 $success_message = "Meal plan updated successfully!";
                 // Refresh meal plan data
-                $mealPlan = $mealPlanningController->getMealPlanById($plan_id);
-                $plan = $mealPlan->fetch_assoc();
+                $plan = $mealPlanningController->getMealPlanById($plan_id);
                 $recipe = $recipeController->getRecipeInfo($plan['recipe_id']);
             } else {
                 $error_message = "Failed to update meal plan. Please try again.";
