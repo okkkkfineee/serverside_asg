@@ -104,8 +104,8 @@ $recipes = $recipeController->filterRecipes($title, $cuisine, $difficulty);
 
                             <div class="row mt-2">
                                 <div class="col-12 filter-button">
-                                    <button type="reset" class="btn general-button" style="background-color: red !important;" id="filter-clear">Clear</button>
-                                    <button type="submit" class="btn general-button" style="background-color: #1448f5 !important;" value="apply" name="action">Apply</button>
+                                    <button type="reset" class="btn general-button me-2 px-4" style="background-color: red !important;" id="filter-clear">Clear</button>
+                                    <button type="submit" class="btn general-button px-4" style="background-color: #1448f5 !important;" value="apply" name="action">Apply</button>
                                 </div>
                             </div>
                         </form>    
@@ -119,7 +119,7 @@ $recipes = $recipeController->filterRecipes($title, $cuisine, $difficulty);
                 <div class="d-flex justify-content-between position-relative mb-3 title-container">
                     <h4 class="position-absolute py-2 start-50 translate-middle-x">Recipes</h4>
                     <form method="POST" action="" class="ms-auto">
-                        <button type="submit" name="view_all"   class="btn btn-secondary">View All Recipes</button>
+                        <button type="submit" name="view_all" class="btn btn-secondary">View All Recipes</button>
                     </form>
                 </div>
                 <div class="row justify-content-center">
@@ -147,7 +147,7 @@ $recipes = $recipeController->filterRecipes($title, $cuisine, $difficulty);
                                     ];
                                     $difficulty = htmlspecialchars($recipe['difficulty']);
                                     echo isset($difficulty_labels[$difficulty]) ? $difficulty_labels[$difficulty] : "-";?></p>
-                                    <a href="view_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary mt-auto">View Recipe</a>
+                                    <a href="view_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary mt-auto" style=" border-color:black !important; border-radius: 15px; background-color: rgb(39, 39, 39)!important;">View Recipe</a>
                                 </div>
                             </div>
                         </div>

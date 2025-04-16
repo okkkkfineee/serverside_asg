@@ -22,6 +22,9 @@ $userId = $_SESSION['user_id'] ?? null; // Ensure userId is set
 <head>
     <meta charset="UTF-8">
     <title><?= htmlspecialchars($thread['title']) ?></title>
+    <link rel="icon" href="../assets/images/icon.png">
+    <link rel="stylesheet" href="../assets/css/header.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <style>
         body {
@@ -80,6 +83,8 @@ $userId = $_SESSION['user_id'] ?? null; // Ensure userId is set
     </style>
 </head>
 <body>
+    <?php include '../includes/header.php'; ?>
+
     <div class="container mt-5">
         <div class="thread-container">
             <a href="category_threads.php?id=<?= $thread['category_id'] ?>" class="back-button">Back to Threads</a>

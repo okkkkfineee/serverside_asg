@@ -1,11 +1,13 @@
 .custom-header {
-    background-color: white;
+    background-color: rgb(39, 39, 39);
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     padding: 10px 20px;
+    height: 60px;
 }
 
 .nav-item {
-    padding: 0px 15px;
+    padding: 0px 10px;
+    margin: 0px 10px;
 }
 
 .nav-item:nth-child(2) .nav-link {
@@ -14,7 +16,27 @@
     text-decoration: none;
 }
 
+.name-dropdown>button, .get-started {
+    background-color: rgb(39, 39, 39) !important;
+    border-radius: 0%;
+    transition: background-color 0.3s ease, filter 0.3s ease;
+}
+
+.name-dropdown>button:hover, .get-started:hover {
+    background-color: rgba(0, 0, 0, 0.05); 
+    border-bottom: 1px solid white !important;
+}
+
 .profile {
     text-decoration: none;
     color: black;
+}
+
+.nav-item-bg {
+    transition: background-color 0.3s ease, filter 0.3s ease;
+}
+
+.nav-item-bg:hover {
+    background-color: rgba(0, 0, 0, 0.05); 
+    border-bottom: 1px solid white;
 }

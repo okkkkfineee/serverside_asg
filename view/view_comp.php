@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
         #comp-image-section {
-            background-color: black; 
+            background-color: rgb(0, 0, 0); 
             height: 300px; 
             display: flex; 
             align-items: center; 
@@ -68,9 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include '../includes/header.php'; ?>
 
     <div id="comp-image-section">
-        <img src="<?= (!empty($comp['comp_image']) ? '../uploads/comp/' . $comp['comp_image'] : '../assets/images/default_comp.png'); ?>" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Competition Image">
+        <img src="<?= (!empty($comp['comp_image']) ? '../uploads/comp/' . $comp['comp_image'] : '../assets/images/default_comp.png'); ?>" style="max-width: 100%; height: 100%; object-fit: cover;" alt="Competition Image">
     </div>
-
     
     <div class="container mb-5 mt-3">
         <div class="row">
@@ -81,8 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="row">
             <div class="col-12 text-center">
-                <a href="#info" class="btn btn-secondary me-2" style="width: 200px;" id="info-btn">Competition Info</a>
-                <a href="#entries" class="btn btn-secondary me-2" style="width: 200px;" id="entries-btn">All Entries</a>
+                <a href="#info" class="btn btn-dark me-2" style="width: 200px;" id="info-btn">Competition Info</a>
+                <a href="#entries" class="btn btn-dark me-2" style="width: 200px;" id="entries-btn">All Entries</a>
                 <?php if (strtotime(date('Y-m-d')) >= strtotime($comp['end_date'] . ' + 11 days')) : ?>
                     <a href="#announcement" class="btn btn-primary" style="width: 200px;" id="announcement-btn">Winner Announcement</a>
                 <?php elseif (strtotime($comp['end_date']) > time()) : ?>
@@ -110,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <form action="view_comp?comp_id=<?php echo $_GET['comp_id'] ?>#entries" method="post" onsubmit="return confirmVote();">
                                 <input type="hidden" name="entry_id" value="<?= htmlspecialchars($entry['entry_id']) ?>">
 
-                                <div class="card border shadow-sm" style="width: 100%;">
+                                <div class="card border shadow-sm mb-3" style="width: 100%; height: 500px;">
                                     <img src="<?= (!empty($entry['images']) ? '../uploads/recipes/' . $entry['images'] : '../assets/images/default_recipe.png'); ?>" class="card-img-top" alt="Recipe Image" style="height: 200px; object-fit: cover;">
                                     <div class="d-flex flex-column card-body justify-content-between p-3 text-start">
                                         <h5 class="card-title"><?= htmlspecialchars($entry['title']) ?></h5>
@@ -119,9 +118,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php if (strtotime($comp['end_date'] . ' + 11 days') > time()) : ?>
                                             <button type="submit" class="btn btn-success mt-2">Vote</button>
                                         <?php else : ?>
-                                            <button type="submit" class="btn btn-secondary mt-2 disabled" disabled>Voting Closed</button>
+                                            <button type="submit" class="btn btn-dark mt-2 disabled text-muted" style="background-color:rgb(137, 147, 156) !important;" disabled>Voting Closed</button>
                                         <?php endif; ?>
-                                        <a href="view_recipe?recipe_id=<?= $entry['recipe_id'] ?>" class="btn btn-secondary mt-2 text-white">View Recipe</a>
+                                        <a href="view_recipe?recipe_id=<?= $entry['recipe_id'] ?>" class="btn btn-secondary mt-1 text-white">View Recipe</a>
                                     </div>
                                 </div>
                             </form>
@@ -137,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="container">
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="info-section bg-dark text-light p-3 rounded">
+                    <div class="info-section bg-dark text-light p-5 rounded-5">
                         <h4 class="text-center">Competition Info</h4>
                         <div class="row">
                             <div class="col info-box">

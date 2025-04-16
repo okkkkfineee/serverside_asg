@@ -88,28 +88,6 @@ function getCompList(filters = {}) {
         }
     })
 
-    // .then(response => {
-    //     const contentType = response.headers.get("content-type");
-    //     if (contentType && contentType.indexOf("application/json") !== -1) {
-    //         // If the content type is application/json, decode as json
-    //         return response.json()
-    //     } else {
-    //         // otherwise it can be treated as text
-    //         return response.text();
-    //     }
-    // })
-    // .then(data => {
-    //     // check if data is an object
-    //     if (typeof data === 'object') {
-    //         if (data.success) {
-    //           console.log('Response data:', data);
-    //           // showList(data.result);
-    //         }
-    //     } else {
-    //        console.log('Response text:', data);
-    //     }
-    // })
-     
     .catch(error => {
         console.error('Error:', error);
     });
@@ -177,7 +155,7 @@ function showList(data) {
                             </p>
                         </div>
                     </div>
-                    <a href="view_comp?comp_id=${comp.comp_id}#entries" class="btn btn-secondary mt-2" style="color: white;">View Competition</a>
+                    <a href="view_comp?comp_id=${comp.comp_id}#entries" class="btn btn-secondary mt-2" style="color: white; background-color:rgb(39, 39, 39) !important; border-radius: 15px !important; border-color:black !important;">View Competition</a>
                 </div>
             </div>
         `;

@@ -60,6 +60,10 @@ $comps = $compController->getUserComp($_SESSION['user_id']);
         .content-section { 
             display: none; 
         }
+
+        .form-control {
+            width: 500px !important;
+        }
     </style>
 </head>
 <body>
@@ -105,7 +109,7 @@ $comps = $compController->getUserComp($_SESSION['user_id']);
                                         <div class="d-flex flex-column card-body justify-content-between p-3 text-start" >
                                             <h5 class="card-title"><?php echo htmlspecialchars($recipe['title']); ?></h5>
                                             <p class="card-text"><?php echo htmlspecialchars(substr($recipe['description'], 0, 80)) . '...'; ?></p>
-                                            <a href="view_own_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary">View Recipe</a>
+                                            <a href="view_own_recipe?recipe_id=<?php echo $recipe['recipe_id']; ?>" class="btn btn-primary" style=" border-color:black !important; border-radius: 15px; background-color: rgb(39, 39, 39)!important;">View Recipe</a>
                                         </div>
                                     </div>
                                 </div>
