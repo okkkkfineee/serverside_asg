@@ -79,6 +79,7 @@ $message = $_GET['message'] ?? null;
   <div class="container mt-5">
     <h2 class="mb-4"><?= htmlspecialchars($category['name']) ?></h2>
     <p class="lead"><?= htmlspecialchars($category['description']) ?></p>
+    <a href="../view/forums.php" class="btn btn-secondary mb-3 me-2">Back to Categories</a>
     <a href="create_thread_form.php?category_id=<?= htmlspecialchars($categoryId) ?>" class="btn btn-success mb-3">Create New Thread</a>
 
     <?php if (empty($threads)): ?>
@@ -96,7 +97,7 @@ $message = $_GET['message'] ?? null;
             <div class="thread-box">
                 <div class="rating">Rating: <?= number_format($averageRating, 1) ?> / 5</div>
                 <div class="thread-title" onclick="toggleReplies(<?= $thread['thread_id'] ?>)">
-                    <?= htmlspecialchars($thread['title']) ?>
+                  <?= htmlspecialchars($thread['title']) ?>
                     <i class="fas fa-chevron-down toggle-icon" id="icon-<?= $thread['thread_id'] ?>"></i>
                 </div>
                 <p class="text-muted">Created by: <strong><?= htmlspecialchars($threadCreator['username'] ?? 'Unknown') ?></strong> at <?= htmlspecialchars($thread['created_time']) ?></p>
@@ -115,18 +116,17 @@ $message = $_GET['message'] ?? null;
 
                 <div class="thread-actions reply-actions d-flex align-items-center mt-3">
                     <div class="me-2">
-                        <!-- if the current user is the thread creator or an admin, show edit and delete buttons -->
-                        <?php if ($currentUserId === $threadCreatorId || $userController->isSuperadmin() || $userController->isAdmin() || $userController->isMod()): ?>
+                        <?php if ($currentUserId === $threadCreatorId): ?>
                             <a href="edit_thread_form.php?id=<?= $thread['thread_id'] ?>" class="btn btn-warning btn-sm px-3">Edit</a>
                             <a href="delete_thread.php?id=<?= $thread['thread_id'] ?>&category_id=<?= $categoryId ?>" class="btn btn-danger btn-sm me-2" onclick="return confirm('Are you sure you want to delete this thread?');">Delete</a>
+                        <?php elseif ($userController->isSuperadmin() || $userController->isAdmin() || $userController->isMod()): ?>
+                            <a href="delete_thread.php?id=<?= $thread['thread_id'] ?>&category_id=<?= $categoryId ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this thread?');">Delete</a>
                         <?php endif; ?>
                     </div>
                     <div>
                         <a href="thread.php?id=<?= $thread['thread_id'] ?>" class="btn btn-primary btn-sm me-2">Create Post (Reply)</a>
-                        <?php if ($currentUserId !== $threadCreatorId): ?>
-                            <a href="rating_form.php?thread_id=<?= $thread['thread_id'] ?>" class="btn btn-secondary btn-sm">Rate this Thread</a> <!-- Rating Button -->
-                        <?php else: ?>
-                            <span class="text-light btn btn-secondary btn-sm disabled" disabled>Cannot Rate Your Own Thread</span>
+                        <?php if ($currentUserId !== $threadCreatorId && !($userController->isSuperadmin() || $userController->isAdmin() || $userController->isMod())): ?>
+                            <a href="rating_form.php?thread_id=<?= $thread['thread_id'] ?>" class="btn btn-secondary btn-sm">Rate this Thread</a>
                         <?php endif; ?>
                     </div>
                 </div>
