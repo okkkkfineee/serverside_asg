@@ -115,10 +115,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <h5 class="card-title"><?= htmlspecialchars($entry['title']) ?></h5>
                                         <p class="card-text"><?= htmlspecialchars(substr($entry['description'], 0, 50)) . '...'; ?></p>
                                         <p class="card-text text-end"><b><?= htmlspecialchars($entry['vote_count']) ?></b> Votes</p>
-                                        <?php if (strtotime($comp['end_date'] . ' + 11 days') > time()) : ?>
-                                            <button type="submit" class="btn btn-success mt-2">Vote</button>
-                                        <?php else : ?>
+                                        <?php if (strtotime($comp['end_date'] . ' + 10 days') < time()) : ?>
                                             <button type="submit" class="btn btn-dark mt-2 disabled text-muted" style="background-color:rgb(137, 147, 156) !important;" disabled>Voting Closed</button>
+                                        <?php elseif (!isset($_SESSION['user_id'])) : ?>
+                                            <a href="entry?type=login" class="btn btn-warning mt-2">Login to Vote</a>
+                                        <?php else : ?>
+                                            <button type="submit" class="btn btn-success mt-2">Vote</button>
                                         <?php endif; ?>
                                         <a href="view_recipe?recipe_id=<?= $entry['recipe_id'] ?>" class="btn btn-secondary mt-1 text-white">View Recipe</a>
                                     </div>
