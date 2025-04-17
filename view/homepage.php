@@ -212,7 +212,7 @@ $comps = $competitionController->getAllComp();
                     <div class="card-body">
                         <h5 class="card-title"><strong>Make Your Own Custom Meal Plans</strong></h5>
                         <p class="card-text">Create personalized meal plans based on your dietary preferences.</p>
-                        <a href="recipe_list" class="btn btn-success px-5">Get Started!</a>
+                        <a href="meal_planner" class="btn btn-success px-5">Get Started!</a>
                     </div>
                 </div>
             </div>
@@ -222,7 +222,7 @@ $comps = $competitionController->getAllComp();
                     <div class="card-body">
                         <h5 class="card-title "><strong>Join Our Forums</strong></h5>
                         <p class="card-text">Connect with other food enthusiasts and share your culinary adventures.</p>
-                        <a href="competition_list" class="btn btn-success px-5">Join Now!</a>
+                        <a href="forums" class="btn btn-success px-5">Join Now!</a>
                     </div>
                 </div>
             </div>
